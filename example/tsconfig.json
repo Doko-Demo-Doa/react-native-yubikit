@@ -2,5 +2,13 @@
   "extends": "../tsconfig",
   "compilerOptions": {
     // Avoid expo-cli auto-generating a tsconfig
-  }
+    // Override customConditions: heroui-native (and most third-party RN libraries)
+    // aren't built against React Native's "react-native-strict-api" typings yet, and
+    // that condition changes which ViewProps/PressableProps shape "react-native"
+    // resolves to, which breaks their component prop checking.
+    "customConditions": ["react-native-yubikit-source"]
+  },
+  // Cancel the parent's "exclude": ["example", "lib"] (root-typecheck-only), which
+  // would otherwise resolve to "../example" here and exclude this whole project.
+  "exclude": ["../lib"]
 }

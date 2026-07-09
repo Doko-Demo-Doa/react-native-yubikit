@@ -4,6 +4,7 @@
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client",
+    "typecheck": "tsc --noEmit",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
@@ -13,12 +14,24 @@
   },
   "dependencies": {
     "@expo/metro-runtime": "~57.0.3",
+    "@gorhom/bottom-sheet": "^5.2.14",
     "expo": "~57.0.4",
     "expo-status-bar": "~57.0.0",
+    "heroui-native": "^1.0.5",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.0",
-    "react-native-web": "~0.21.2"
+    "react-native-gesture-handler": "~2.32.0",
+    "react-native-reanimated": "4.5.0",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "4.25.2",
+    "react-native-svg": "15.15.4",
+    "react-native-web": "~0.21.2",
+    "react-native-worklets": "^0.10.2",
+    "tailwind-merge": "^3.6.0",
+    "tailwind-variants": "^3.2.2",
+    "tailwindcss": "^4.3.2",
+    "uniwind": "^1.10.0"
   },
   "private": true,
   "devDependencies": {
