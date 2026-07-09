@@ -1,0 +1,12 @@
+packages:
+  - example
+
+nodeLinker: hoisted
+autoInstallPeers: true
+strictPeerDependencies: false
+
+allowBuilds:
+  lefthook: true
+
+patchedDependencies:
+  '@expo/metro-config': patches/@expo__metro-config.patch
