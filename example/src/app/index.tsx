@@ -1,4 +1,3 @@
-import { ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import {
   Heading,
@@ -12,6 +11,7 @@ import {
 } from '../components/heroui';
 import { DeviceBanner } from '../components/DeviceBanner';
 import { LogPanel } from '../components/LogPanel';
+import { MasterLayout } from '@/components/layouts/MasterLayout';
 
 const FEATURES = [
   {
@@ -58,10 +58,7 @@ const FEATURES = [
 
 export default function HomeScreen() {
   return (
-    <ScrollView
-      className="flex-1 bg-background"
-      contentContainerClassName="p-4"
-    >
+    <MasterLayout>
       <Heading className="mb-1 text-3xl">react-native-yubikit</Heading>
       <Paragraph color="muted" className="mb-4">
         Pick a module to try it against a connected YubiKey.
@@ -87,6 +84,6 @@ export default function HomeScreen() {
       </ListGroup>
 
       <LogPanel />
-    </ScrollView>
+    </MasterLayout>
   );
 }

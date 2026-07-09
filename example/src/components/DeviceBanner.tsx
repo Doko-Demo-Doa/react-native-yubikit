@@ -1,5 +1,5 @@
 import { View } from 'react-native';
-import { Chip } from 'heroui-native';
+import { Chip, Description, Label, Radio, RadioGroup } from 'heroui-native';
 import {
   Button,
   Card,
@@ -43,23 +43,28 @@ export function DeviceBanner() {
             No YubiKey connected. Start USB discovery, then plug one in.
           </Paragraph>
         )}
-        {devices.length > 1 ? (
-          <View className="flex-row flex-wrap gap-2">
-            {devices.map((device) => (
-              <Chip
-                key={device.handle}
-                color={
-                  device.handle === selectedDevice?.handle
-                    ? 'accent'
-                    : 'default'
-                }
-                onPress={() => selectDevice(device.handle)}
-              >
-                {device.transport.toUpperCase()}
-              </Chip>
-            ))}
-          </View>
-        ) : null}
+
+        <RadioGroup
+          value={selectedDevice?.handle ?? ''}
+          onValueChange={selectDevice}
+          className="py-8"
+        >
+          {devices.map((device) => (
+            <RadioGroup.Item
+              key={device.handle}
+              value={device.handle}
+              className="flex-row items-center gap-2"
+            >
+              <Label>{device.transport.toUpperCase()}</Label>
+              <Description>{device.handle}</Description>
+              <Radio>
+                <Radio.Indicator>
+                  <Radio.IndicatorThumb />
+                </Radio.Indicator>
+              </Radio>
+            </RadioGroup.Item>
+          ))}
+        </RadioGroup>
       </CardBody>
       <CardFooter>
         <Button

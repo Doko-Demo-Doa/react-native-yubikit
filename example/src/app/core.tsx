@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import { Chip } from 'heroui-native';
 import {
   Button,
@@ -12,10 +12,10 @@ import {
   Paragraph,
 } from '../components/heroui';
 import { Core } from 'react-native-yubikit';
-import { ScreenHeader } from '../components/ScreenHeader';
 import { DeviceBanner } from '../components/DeviceBanner';
 import { LogPanel } from '../components/LogPanel';
 import { useYubiKey } from '../context/YubiKeyContext';
+import { MasterLayout } from '@/components/layouts/MasterLayout';
 
 export default function CoreScreen() {
   const { selectedDevice, log, withBusy, isBusy } = useYubiKey();
@@ -50,15 +50,7 @@ export default function CoreScreen() {
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-background"
-      contentContainerClassName="p-4"
-    >
-      <ScreenHeader
-        title="Core & Discovery"
-        description="USB/NFC discovery and raw connection handles."
-      />
-
+    <MasterLayout>
       <DeviceBanner />
 
       <Card className="mb-4">
@@ -109,6 +101,6 @@ export default function CoreScreen() {
       </Button>
 
       <LogPanel />
-    </ScrollView>
+    </MasterLayout>
   );
 }

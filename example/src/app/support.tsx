@@ -1,20 +1,20 @@
 import { useState } from 'react';
-import { ScrollView } from 'react-native';
 import { Button, Card, ListGroup } from 'heroui-native';
-import { Support } from 'react-native-yubikit';
+import { Support, type YubiKeyDevice } from 'react-native-yubikit';
+
 import { ScreenHeader } from '../components/ScreenHeader';
 import { DeviceBanner } from '../components/DeviceBanner';
 import { LogPanel } from '../components/LogPanel';
 import { useYubiKey } from '../context/YubiKeyContext';
+import { MasterLayout } from '@/components/layouts/MasterLayout';
 
 export default function SupportScreen() {
-  const { selectedDevice, log, withBusy, isBusy } = useYubiKey();
+  const { devices, log, withBusy, isBusy } = useYubiKey();
   const [name, setName] = useState<string | null>(null);
 
-  const identifyDevice = async () => {
-    if (!selectedDevice) return;
+  const identifyDevice = async (device: YubiKeyDevice) => {
     await withBusy(async () => {
-      const info = await Support.readInfo(selectedDevice.handle);
+      const info = await Support.readInfo(device.handle);
       const deviceName = await Support.getName(info);
       setName(deviceName);
       log(`Identified as ${deviceName}`);
@@ -22,10 +22,7 @@ export default function SupportScreen() {
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-background"
-      contentContainerClassName="p-4"
-    >
+    <MasterLayout>
       <ScreenHeader
         title="Support"
         description="Device identification helpers shared across transports."
@@ -55,8 +52,12 @@ export default function SupportScreen() {
         <Card.Footer>
           <Button
             size="sm"
-            isDisabled={!selectedDevice || isBusy}
-            onPress={identifyDevice}
+            isDisabled={!devices.length || isBusy}
+            onPress={() => {
+              if (devices[0]) {
+                identifyDevice(devices[0]);
+              }
+            }}
           >
             Identify
           </Button>
@@ -64,6 +65,6 @@ export default function SupportScreen() {
       </Card>
 
       <LogPanel />
-    </ScrollView>
+    </MasterLayout>
   );
 }

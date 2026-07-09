@@ -49,20 +49,23 @@ export function YubiKeyProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const subscription = Core.addYubiKeyListener((event: YubiKeyEvent) => {
+      console.log('YubiKey event:', event);
       if (event.type === 'attached') {
-        setDevices((prev) => [
-          ...prev.filter((d) => d.handle !== event.device.handle),
-          event.device,
-        ]);
+        setDevices([event.device]);
         setSelectedHandle((prev) => prev ?? event.device.handle);
         log(`YubiKey attached (${event.device.transport.toUpperCase()})`);
-      } else if (event.type === 'detached') {
+
+        return;
+      }
+      if (event.type === 'detached') {
         setDevices((prev) => prev.filter((d) => d.handle !== event.handle));
         setSelectedHandle((prev) => (prev === event.handle ? null : prev));
         log('YubiKey detached');
-      } else if (event.type === 'error') {
-        log(event.error, true);
+
+        return;
       }
+
+      log(event.error, true);
     });
 
     return () => subscription.remove();
