@@ -48,4 +48,15 @@ android {
 
 dependencies {
   implementation "com.facebook.react:react-android"
+
+  def yubikitVersion = "3.2.0"
+  implementation "com.yubico.yubikit:android:${yubikitVersion}"
+  implementation "com.yubico.yubikit:core:${yubikitVersion}"
+  implementation "com.yubico.yubikit:fido:${yubikitVersion}"
+  implementation "com.yubico.yubikit:management:${yubikitVersion}"
+  implementation "com.yubico.yubikit:yubiotp:${yubikitVersion}"
+  implementation "com.yubico.yubikit:openpgp:${yubikitVersion}"
+  implementation "com.yubico.yubikit:oath:${yubikitVersion}"
+  implementation "com.yubico.yubikit:piv:${yubikitVersion}"
+  implementation "com.yubico.yubikit:support:${yubikitVersion}"
 }
