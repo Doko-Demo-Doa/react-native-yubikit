@@ -1,43 +1,39 @@
 import { useState } from 'react';
 import { ScrollView } from 'react-native';
 import { Button, Card, ListGroup } from 'heroui-native';
-import { Fido } from 'react-native-yubikit';
-import type { Ctap2Info } from 'react-native-yubikit';
+import { YubiOtp } from 'react-native-yubikit';
+import type { ConfigurationState } from 'react-native-yubikit';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { DeviceBanner } from '../components/DeviceBanner';
 import { LabeledInput } from '../components/LabeledInput';
 import { LogPanel } from '../components/LogPanel';
 import { useYubiKey } from '../context/YubiKeyContext';
-import type { Route } from '../routes';
 
-export function FidoScreen({
-  onNavigate,
-}: {
-  onNavigate: (route: Route) => void;
-}) {
+export default function YubiOtpScreen() {
   const { selectedDevice, log, withBusy, isBusy } = useYubiKey();
-  const [info, setInfo] = useState<Ctap2Info | null>(null);
-  const [pin, setPin] = useState('');
-  const [credentialCount, setCredentialCount] = useState<number | null>(null);
-  const [rpIds, setRpIds] = useState<string[]>([]);
+  const [state, setState] = useState<ConfigurationState | null>(null);
+  const [challengeBase64, setChallengeBase64] = useState('');
+  const [response, setResponse] = useState<string | null>(null);
 
-  const readInfo = async () => {
+  const readConfigurationState = async () => {
     if (!selectedDevice) return;
     await withBusy(async () => {
-      const result = await Fido.getInfo(selectedDevice.handle);
-      setInfo(result);
-      log(`Authenticator supports ${result.versions.join(', ')}`);
+      const result = await YubiOtp.getConfigurationState(selectedDevice.handle);
+      setState(result);
+      log('Read slot configuration state');
     });
   };
 
-  const readResidentCredentials = async () => {
-    if (!selectedDevice || !pin) return;
+  const calculateChallengeResponse = async () => {
+    if (!selectedDevice || !challengeBase64) return;
     await withBusy(async () => {
-      const count = await Fido.getCredentialCount(selectedDevice.handle, pin);
-      const ids = await Fido.getRpIdList(selectedDevice.handle, pin);
-      setCredentialCount(count);
-      setRpIds(ids);
-      log(`${count} resident credential(s) across ${ids.length} RP(s)`);
+      const result = await YubiOtp.calculateHmacSha1(
+        selectedDevice.handle,
+        'TWO',
+        challengeBase64
+      );
+      setResponse(result);
+      log('Calculated HMAC-SHA1 response for slot 2');
     });
   };
 
@@ -47,33 +43,32 @@ export function FidoScreen({
       contentContainerClassName="p-4"
     >
       <ScreenHeader
-        title="FIDO2 / WebAuthn"
-        description="Authenticator info and resident credential management."
-        onBack={() => onNavigate('home')}
+        title="YubiOTP"
+        description="Static slot configuration and challenge-response."
       />
 
       <DeviceBanner />
 
       <Card className="mb-4">
         <Card.Header>
-          <Card.Title>Authenticator info</Card.Title>
+          <Card.Title>Slot state</Card.Title>
         </Card.Header>
         <Card.Body>
-          {info ? (
+          {state ? (
             <ListGroup variant="transparent">
               <ListGroup.Item>
                 <ListGroup.ItemContent>
-                  <ListGroup.ItemTitle>Versions</ListGroup.ItemTitle>
+                  <ListGroup.ItemTitle>Slot 1</ListGroup.ItemTitle>
                   <ListGroup.ItemDescription>
-                    {info.versions.join(', ')}
+                    {state.slot1Configured ? 'configured' : 'empty'}
                   </ListGroup.ItemDescription>
                 </ListGroup.ItemContent>
               </ListGroup.Item>
               <ListGroup.Item>
                 <ListGroup.ItemContent>
-                  <ListGroup.ItemTitle>Min PIN length</ListGroup.ItemTitle>
+                  <ListGroup.ItemTitle>Slot 2</ListGroup.ItemTitle>
                   <ListGroup.ItemDescription>
-                    {info.minPinLength ?? 'unknown'}
+                    {state.slot2Configured ? 'configured' : 'empty'}
                   </ListGroup.ItemDescription>
                 </ListGroup.ItemContent>
               </ListGroup.Item>
@@ -84,35 +79,34 @@ export function FidoScreen({
           <Button
             size="sm"
             isDisabled={!selectedDevice || isBusy}
-            onPress={readInfo}
+            onPress={readConfigurationState}
           >
-            Read info
+            Read slot state
           </Button>
         </Card.Footer>
       </Card>
 
       <Card className="mb-4">
         <Card.Header>
-          <Card.Title>Resident credentials</Card.Title>
-          <Card.Description>Requires the FIDO2 PIN.</Card.Description>
+          <Card.Title>Challenge-response (slot 2)</Card.Title>
+          <Card.Description>
+            Requires an HMAC-SHA1 challenge-response credential in slot 2.
+          </Card.Description>
         </Card.Header>
         <Card.Body className="gap-2">
           <LabeledInput
-            label="PIN"
-            value={pin}
-            onChangeText={setPin}
-            secureTextEntry
-            placeholder="FIDO2 PIN"
+            label="Challenge (base64)"
+            value={challengeBase64}
+            onChangeText={setChallengeBase64}
+            placeholder="Y2hhbGxlbmdl"
           />
-          {credentialCount !== null ? (
+          {response ? (
             <ListGroup variant="transparent">
               <ListGroup.Item>
                 <ListGroup.ItemContent>
-                  <ListGroup.ItemTitle>
-                    {credentialCount} credential(s)
-                  </ListGroup.ItemTitle>
+                  <ListGroup.ItemTitle>Response</ListGroup.ItemTitle>
                   <ListGroup.ItemDescription>
-                    {rpIds.length > 0 ? rpIds.join(', ') : 'no relying parties'}
+                    {response}
                   </ListGroup.ItemDescription>
                 </ListGroup.ItemContent>
               </ListGroup.Item>
@@ -122,10 +116,10 @@ export function FidoScreen({
         <Card.Footer>
           <Button
             size="sm"
-            isDisabled={!selectedDevice || isBusy || !pin}
-            onPress={readResidentCredentials}
+            isDisabled={!selectedDevice || isBusy || !challengeBase64}
+            onPress={calculateChallengeResponse}
           >
-            List credentials
+            Calculate response
           </Button>
         </Card.Footer>
       </Card>

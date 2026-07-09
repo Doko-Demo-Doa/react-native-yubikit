@@ -8,13 +8,8 @@ import { DeviceBanner } from '../components/DeviceBanner';
 import { LabeledInput } from '../components/LabeledInput';
 import { LogPanel } from '../components/LogPanel';
 import { useYubiKey } from '../context/YubiKeyContext';
-import type { Route } from '../routes';
 
-export function OpenPgpScreen({
-  onNavigate,
-}: {
-  onNavigate: (route: Route) => void;
-}) {
+export default function OpenPgpScreen() {
   const { selectedDevice, log, withBusy, isBusy } = useYubiKey();
   const [pin, setPin] = useState('');
   const [version, setVersion] = useState<Version | null>(null);
@@ -56,7 +51,6 @@ export function OpenPgpScreen({
       <ScreenHeader
         title="OpenPGP"
         description="PIN verification and application metadata."
-        onBack={() => onNavigate('home')}
       />
 
       <DeviceBanner />

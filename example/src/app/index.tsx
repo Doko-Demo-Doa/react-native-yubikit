@@ -1,4 +1,5 @@
 import { ScrollView } from 'react-native';
+import { router } from 'expo-router';
 import {
   Heading,
   ListGroup,
@@ -11,56 +12,55 @@ import {
 } from '../components/heroui';
 import { DeviceBanner } from '../components/DeviceBanner';
 import { LogPanel } from '../components/LogPanel';
-import type { Route } from '../routes';
 
-const FEATURES: Array<{ route: Route; title: string; description: string }> = [
+const FEATURES: Array<{
+  href: `/${string}`;
+  title: string;
+  description: string;
+}> = [
   {
-    route: 'core',
+    href: '/core',
     title: 'Core & Discovery',
     description: 'USB/NFC discovery, raw APDU, connection handles',
   },
   {
-    route: 'management',
+    href: '/management',
     title: 'Management',
     description: 'Device info, capabilities, USB mode',
   },
   {
-    route: 'oath',
+    href: '/oath',
     title: 'OATH',
     description: 'TOTP/HOTP credentials and codes',
   },
   {
-    route: 'piv',
+    href: '/piv',
     title: 'PIV',
     description: 'PIN/PUK, slots, key generation',
   },
   {
-    route: 'openpgp',
+    href: '/openpgp',
     title: 'OpenPGP',
     description: 'PIN verification, signature counter, keys',
   },
   {
-    route: 'yubiotp',
+    href: '/yubiotp',
     title: 'YubiOTP',
     description: 'Slot configuration, HMAC-SHA1 challenge-response',
   },
   {
-    route: 'fido',
+    href: '/fido',
     title: 'FIDO2 / WebAuthn',
     description: 'Authenticator info and resident credentials',
   },
   {
-    route: 'support',
+    href: '/support',
     title: 'Support',
     description: 'Device identification helpers',
   },
 ];
 
-export function HomeScreen({
-  onNavigate,
-}: {
-  onNavigate: (route: Route) => void;
-}) {
+export default function HomeScreen() {
   return (
     <ScrollView
       className="flex-1 bg-background"
@@ -76,8 +76,8 @@ export function HomeScreen({
       <ListGroup>
         {FEATURES.map((feature) => (
           <ListGroupItem
-            key={feature.route}
-            onPress={() => onNavigate(feature.route)}
+            key={feature.href}
+            onPress={() => router.push(feature.href)}
           >
             <ListGroupItemContent>
               <ListGroupItemTitle>{feature.title}</ListGroupItemTitle>

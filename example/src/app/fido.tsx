@@ -1,44 +1,38 @@
 import { useState } from 'react';
 import { ScrollView } from 'react-native';
 import { Button, Card, ListGroup } from 'heroui-native';
-import { YubiOtp } from 'react-native-yubikit';
-import type { ConfigurationState } from 'react-native-yubikit';
+import { Fido } from 'react-native-yubikit';
+import type { Ctap2Info } from 'react-native-yubikit';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { DeviceBanner } from '../components/DeviceBanner';
 import { LabeledInput } from '../components/LabeledInput';
 import { LogPanel } from '../components/LogPanel';
 import { useYubiKey } from '../context/YubiKeyContext';
-import type { Route } from '../routes';
 
-export function YubiOtpScreen({
-  onNavigate,
-}: {
-  onNavigate: (route: Route) => void;
-}) {
+export default function FidoScreen() {
   const { selectedDevice, log, withBusy, isBusy } = useYubiKey();
-  const [state, setState] = useState<ConfigurationState | null>(null);
-  const [challengeBase64, setChallengeBase64] = useState('');
-  const [response, setResponse] = useState<string | null>(null);
+  const [info, setInfo] = useState<Ctap2Info | null>(null);
+  const [pin, setPin] = useState('');
+  const [credentialCount, setCredentialCount] = useState<number | null>(null);
+  const [rpIds, setRpIds] = useState<string[]>([]);
 
-  const readConfigurationState = async () => {
+  const readInfo = async () => {
     if (!selectedDevice) return;
     await withBusy(async () => {
-      const result = await YubiOtp.getConfigurationState(selectedDevice.handle);
-      setState(result);
-      log('Read slot configuration state');
+      const result = await Fido.getInfo(selectedDevice.handle);
+      setInfo(result);
+      log(`Authenticator supports ${result.versions.join(', ')}`);
     });
   };
 
-  const calculateChallengeResponse = async () => {
-    if (!selectedDevice || !challengeBase64) return;
+  const readResidentCredentials = async () => {
+    if (!selectedDevice || !pin) return;
     await withBusy(async () => {
-      const result = await YubiOtp.calculateHmacSha1(
-        selectedDevice.handle,
-        'TWO',
-        challengeBase64
-      );
-      setResponse(result);
-      log('Calculated HMAC-SHA1 response for slot 2');
+      const count = await Fido.getCredentialCount(selectedDevice.handle, pin);
+      const ids = await Fido.getRpIdList(selectedDevice.handle, pin);
+      setCredentialCount(count);
+      setRpIds(ids);
+      log(`${count} resident credential(s) across ${ids.length} RP(s)`);
     });
   };
 
@@ -48,33 +42,32 @@ export function YubiOtpScreen({
       contentContainerClassName="p-4"
     >
       <ScreenHeader
-        title="YubiOTP"
-        description="Static slot configuration and challenge-response."
-        onBack={() => onNavigate('home')}
+        title="FIDO2 / WebAuthn"
+        description="Authenticator info and resident credential management."
       />
 
       <DeviceBanner />
 
       <Card className="mb-4">
         <Card.Header>
-          <Card.Title>Slot state</Card.Title>
+          <Card.Title>Authenticator info</Card.Title>
         </Card.Header>
         <Card.Body>
-          {state ? (
+          {info ? (
             <ListGroup variant="transparent">
               <ListGroup.Item>
                 <ListGroup.ItemContent>
-                  <ListGroup.ItemTitle>Slot 1</ListGroup.ItemTitle>
+                  <ListGroup.ItemTitle>Versions</ListGroup.ItemTitle>
                   <ListGroup.ItemDescription>
-                    {state.slot1Configured ? 'configured' : 'empty'}
+                    {info.versions.join(', ')}
                   </ListGroup.ItemDescription>
                 </ListGroup.ItemContent>
               </ListGroup.Item>
               <ListGroup.Item>
                 <ListGroup.ItemContent>
-                  <ListGroup.ItemTitle>Slot 2</ListGroup.ItemTitle>
+                  <ListGroup.ItemTitle>Min PIN length</ListGroup.ItemTitle>
                   <ListGroup.ItemDescription>
-                    {state.slot2Configured ? 'configured' : 'empty'}
+                    {info.minPinLength ?? 'unknown'}
                   </ListGroup.ItemDescription>
                 </ListGroup.ItemContent>
               </ListGroup.Item>
@@ -85,34 +78,35 @@ export function YubiOtpScreen({
           <Button
             size="sm"
             isDisabled={!selectedDevice || isBusy}
-            onPress={readConfigurationState}
+            onPress={readInfo}
           >
-            Read slot state
+            Read info
           </Button>
         </Card.Footer>
       </Card>
 
       <Card className="mb-4">
         <Card.Header>
-          <Card.Title>Challenge-response (slot 2)</Card.Title>
-          <Card.Description>
-            Requires an HMAC-SHA1 challenge-response credential in slot 2.
-          </Card.Description>
+          <Card.Title>Resident credentials</Card.Title>
+          <Card.Description>Requires the FIDO2 PIN.</Card.Description>
         </Card.Header>
         <Card.Body className="gap-2">
           <LabeledInput
-            label="Challenge (base64)"
-            value={challengeBase64}
-            onChangeText={setChallengeBase64}
-            placeholder="Y2hhbGxlbmdl"
+            label="PIN"
+            value={pin}
+            onChangeText={setPin}
+            secureTextEntry
+            placeholder="FIDO2 PIN"
           />
-          {response ? (
+          {credentialCount !== null ? (
             <ListGroup variant="transparent">
               <ListGroup.Item>
                 <ListGroup.ItemContent>
-                  <ListGroup.ItemTitle>Response</ListGroup.ItemTitle>
+                  <ListGroup.ItemTitle>
+                    {credentialCount} credential(s)
+                  </ListGroup.ItemTitle>
                   <ListGroup.ItemDescription>
-                    {response}
+                    {rpIds.length > 0 ? rpIds.join(', ') : 'no relying parties'}
                   </ListGroup.ItemDescription>
                 </ListGroup.ItemContent>
               </ListGroup.Item>
@@ -122,10 +116,10 @@ export function YubiOtpScreen({
         <Card.Footer>
           <Button
             size="sm"
-            isDisabled={!selectedDevice || isBusy || !challengeBase64}
-            onPress={calculateChallengeResponse}
+            isDisabled={!selectedDevice || isBusy || !pin}
+            onPress={readResidentCredentials}
           >
-            Calculate response
+            List credentials
           </Button>
         </Card.Footer>
       </Card>

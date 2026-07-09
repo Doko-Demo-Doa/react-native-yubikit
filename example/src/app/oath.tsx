@@ -21,13 +21,8 @@ import { DeviceBanner } from '../components/DeviceBanner';
 import { LabeledInput } from '../components/LabeledInput';
 import { LogPanel } from '../components/LogPanel';
 import { useYubiKey } from '../context/YubiKeyContext';
-import type { Route } from '../routes';
 
-export function OathScreen({
-  onNavigate,
-}: {
-  onNavigate: (route: Route) => void;
-}) {
+export default function OathScreen() {
   const { selectedDevice, log, withBusy, isBusy } = useYubiKey();
   const [password, setPassword] = useState('');
   const [accountName, setAccountName] = useState('');
@@ -102,7 +97,6 @@ export function OathScreen({
       <ScreenHeader
         title="OATH"
         description="TOTP/HOTP credential storage and code calculation."
-        onBack={() => onNavigate('home')}
       />
 
       <DeviceBanner />

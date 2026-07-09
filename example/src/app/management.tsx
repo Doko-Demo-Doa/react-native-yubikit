@@ -20,13 +20,8 @@ import { ScreenHeader } from '../components/ScreenHeader';
 import { DeviceBanner } from '../components/DeviceBanner';
 import { LogPanel } from '../components/LogPanel';
 import { useYubiKey } from '../context/YubiKeyContext';
-import type { Route } from '../routes';
 
-export function ManagementScreen({
-  onNavigate,
-}: {
-  onNavigate: (route: Route) => void;
-}) {
+export default function ManagementScreen() {
   const { selectedDevice, log, withBusy, isBusy } = useYubiKey();
   const [info, setInfo] = useState<DeviceInfo | null>(null);
 
@@ -55,7 +50,6 @@ export function ManagementScreen({
       <ScreenHeader
         title="Management"
         description="Read device metadata and toggle enabled interfaces."
-        onBack={() => onNavigate('home')}
       />
 
       <DeviceBanner />

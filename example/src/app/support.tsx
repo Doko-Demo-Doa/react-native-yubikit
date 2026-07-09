@@ -6,13 +6,8 @@ import { ScreenHeader } from '../components/ScreenHeader';
 import { DeviceBanner } from '../components/DeviceBanner';
 import { LogPanel } from '../components/LogPanel';
 import { useYubiKey } from '../context/YubiKeyContext';
-import type { Route } from '../routes';
 
-export function SupportScreen({
-  onNavigate,
-}: {
-  onNavigate: (route: Route) => void;
-}) {
+export default function SupportScreen() {
   const { selectedDevice, log, withBusy, isBusy } = useYubiKey();
   const [name, setName] = useState<string | null>(null);
 
@@ -34,7 +29,6 @@ export function SupportScreen({
       <ScreenHeader
         title="Support"
         description="Device identification helpers shared across transports."
-        onBack={() => onNavigate('home')}
       />
 
       <DeviceBanner />

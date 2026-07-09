@@ -21,7 +21,6 @@ import { DeviceBanner } from '../components/DeviceBanner';
 import { LabeledInput } from '../components/LabeledInput';
 import { LogPanel } from '../components/LogPanel';
 import { useYubiKey } from '../context/YubiKeyContext';
-import type { Route } from '../routes';
 
 const SLOTS = [
   'AUTHENTICATION',
@@ -30,11 +29,7 @@ const SLOTS = [
   'CARD_AUTH',
 ] as const;
 
-export function PivScreen({
-  onNavigate,
-}: {
-  onNavigate: (route: Route) => void;
-}) {
+export default function PivScreen() {
   const { selectedDevice, log, withBusy, isBusy } = useYubiKey();
   const [pin, setPin] = useState('');
   const [pinAttempts, setPinAttempts] = useState<number | null>(null);
@@ -92,7 +87,6 @@ export function PivScreen({
       <ScreenHeader
         title="PIV"
         description="Smart-card PIN, slot metadata and key generation."
-        onBack={() => onNavigate('home')}
       />
 
       <DeviceBanner />

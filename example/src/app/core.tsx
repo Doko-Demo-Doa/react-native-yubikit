@@ -16,13 +16,8 @@ import { ScreenHeader } from '../components/ScreenHeader';
 import { DeviceBanner } from '../components/DeviceBanner';
 import { LogPanel } from '../components/LogPanel';
 import { useYubiKey } from '../context/YubiKeyContext';
-import type { Route } from '../routes';
 
-export function CoreScreen({
-  onNavigate,
-}: {
-  onNavigate: (route: Route) => void;
-}) {
+export default function CoreScreen() {
   const { selectedDevice, log, withBusy, isBusy } = useYubiKey();
   const [connectionHandle, setConnectionHandle] = useState<string | null>(null);
 
@@ -62,7 +57,6 @@ export function CoreScreen({
       <ScreenHeader
         title="Core & Discovery"
         description="USB/NFC discovery and raw connection handles."
-        onBack={() => onNavigate('home')}
       />
 
       <DeviceBanner />
