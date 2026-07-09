@@ -13,11 +13,7 @@ import {
 import { DeviceBanner } from '../components/DeviceBanner';
 import { LogPanel } from '../components/LogPanel';
 
-const FEATURES: Array<{
-  href: `/${string}`;
-  title: string;
-  description: string;
-}> = [
+const FEATURES = [
   {
     href: '/core',
     title: 'Core & Discovery',
@@ -58,7 +54,7 @@ const FEATURES: Array<{
     title: 'Support',
     description: 'Device identification helpers',
   },
-];
+] as const;
 
 export default function HomeScreen() {
   return (

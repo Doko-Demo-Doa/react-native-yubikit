@@ -72,6 +72,7 @@ export function YubiKeyProvider({ children }: { children: ReactNode }) {
     try {
       if (usbActive) {
         await Core.stopUsbDiscovery();
+        setDevices([]);
         setUsbActive(false);
         log('Stopped USB discovery');
       } else {
