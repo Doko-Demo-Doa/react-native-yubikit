@@ -1,6 +1,6 @@
 # @doko/react-native-yubikit
 
-A React Native wrapper around the [YubiKit Android SDK v3](https://developers.yubico.com/yubikit-android/) for interacting with YubiKey devices over USB and NFC.
+A React Native wrapper around the [YubiKit Android SDK v3](https://developers.yubico.com/yubikit-android/) and [YubiKit iOS SDK](https://developers.yubico.com/yubikit-ios/) for interacting with YubiKey devices over USB and NFC.
 
 ## Features
 
@@ -13,6 +13,21 @@ A React Native wrapper around the [YubiKit Android SDK v3](https://developers.yu
 - YubiOTP: slot configuration and HMAC-SHA1 challenge-response
 - FIDO2 / WebAuthn: authenticator info, resident credentials
 - Support helpers for device identification
+
+## Platform support
+
+This library targets both Android and iOS, but feature parity is a work in progress.
+
+| Module | Android | iOS | Notes |
+|---|---|---|---|
+| Core | Full | Partial | iOS supports USB/NFC discovery, listing devices, and closing connections. `sendApdu` is not yet implemented. |
+| Support | Full | Partial | iOS implements `getName`; `readInfo` is not yet implemented. |
+| Management | Full | Stub | iOS rejects all methods with "Not implemented on iOS". |
+| OATH | Full | Stub | iOS rejects all methods with "Not implemented on iOS". |
+| PIV | Full | Stub | iOS rejects all methods with "Not implemented on iOS". |
+| OpenPGP | Full | Stub | iOS rejects all methods with "Not implemented on iOS". |
+| YubiOTP | Full | Stub | iOS rejects all methods with "Not implemented on iOS". |
+| FIDO2 | Full | Stub | iOS rejects all methods with "Not implemented on iOS". |
 
 ## Installation
 
@@ -32,7 +47,7 @@ pnpm add @doko/react-native-yubikit
 
 - React Native 0.74+ with the New Architecture enabled (Fabric / TurboModules)
 - Android: minSdk 24
-- iOS: not currently supported (only an Objective-C++ stub is present)
+- iOS: partial support (Core discovery and Support helpers only)
 
 ### Android permissions
 
