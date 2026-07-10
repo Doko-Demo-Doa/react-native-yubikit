@@ -2,10 +2,8 @@ package com.yubikit
 
 import android.app.Activity
 import android.content.Context
-import android.os.Bundle
 import com.facebook.react.bridge.Arguments
-import com.facebook.react.bridge.ReactContext
-import com.facebook.react.modules.core.DeviceEventManagerModule
+import com.facebook.react.bridge.WritableMap
 import com.yubico.yubikit.android.YubiKitManager
 import com.yubico.yubikit.android.transport.nfc.NfcConfiguration
 import com.yubico.yubikit.android.transport.nfc.NfcNotAvailable
@@ -17,6 +15,7 @@ import com.yubico.yubikit.core.YubiKeyDevice
 import com.yubico.yubikit.core.fido.FidoConnection
 import com.yubico.yubikit.core.otp.OtpConnection
 import com.yubico.yubikit.core.smartcard.SmartCardConnection
+import com.yubikit.utils.YubikitUtils.toWritableMap
 import java.io.IOException
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -115,36 +114,42 @@ object YubiKitManagerHolder {
     @JvmStatic
     fun getNfcConfiguration(): NfcConfiguration = nfcConfiguration
 
+    // Set by YubikitCoreModule while the TurboModule instance is alive, so device
+    // attach/detach/failure can be routed to its generated emitOnYubiKeyEvent(...).
+    @Volatile
+    private var eventHandler: ((WritableMap) -> Unit)? = null
+
     @JvmStatic
-    fun emitDeviceAttached(reactContext: ReactContext?, device: YubiKeyDevice) {
-        val handle = putDevice(device)
-        val params = Bundle().apply {
-            putString("type", "attached")
-            putBundle("device", deviceToBundle(handle, device))
-        }
-        reactContext?.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-            ?.emit("YubiKeyEvent", Arguments.fromBundle(params))
+    fun setEventHandler(handler: ((WritableMap) -> Unit)?) {
+        eventHandler = handler
     }
 
     @JvmStatic
-    fun emitDeviceDetached(reactContext: ReactContext?, handle: String) {
+    fun emitDeviceAttached(handle: String, device: YubiKeyDevice) {
+        val params = Arguments.createMap().apply {
+            putString("type", "attached")
+            putMap("device", deviceToBundle(handle, device).toWritableMap())
+        }
+        eventHandler?.invoke(params)
+    }
+
+    @JvmStatic
+    fun emitDeviceDetached(handle: String) {
         removeDevice(handle)
-        val params = Bundle().apply {
+        val params = Arguments.createMap().apply {
             putString("type", "detached")
             putString("handle", handle)
         }
-        reactContext?.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-            ?.emit("YubiKeyEvent", Arguments.fromBundle(params))
+        eventHandler?.invoke(params)
     }
 
     @JvmStatic
-    fun emitError(reactContext: ReactContext?, error: String) {
-        val params = Bundle().apply {
+    fun emitError(error: String) {
+        val params = Arguments.createMap().apply {
             putString("type", "error")
             putString("error", error)
         }
-        reactContext?.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-            ?.emit("YubiKeyEvent", Arguments.fromBundle(params))
+        eventHandler?.invoke(params)
     }
 
     @JvmStatic
@@ -166,13 +171,13 @@ object YubiKitManagerHolder {
     }
 
     @JvmStatic
-    fun startUsbDiscovery(reactContext: ReactContext?) {
+    fun startUsbDiscovery() {
         getManager().startUsbDiscovery(usbConfiguration) { device: UsbYubiKeyDevice ->
             val handle = putDevice(device)
             device.setOnClosed {
-                emitDeviceDetached(reactContext, handle)
+                emitDeviceDetached(handle)
             }
-            emitDeviceAttached(reactContext, device)
+            emitDeviceAttached(handle, device)
         }
     }
 
@@ -183,10 +188,10 @@ object YubiKitManagerHolder {
 
     @JvmStatic
     @Throws(NfcNotAvailable::class)
-    fun startNfcDiscovery(activity: Activity, reactContext: ReactContext?) {
+    fun startNfcDiscovery(activity: Activity) {
         getManager().startNfcDiscovery(nfcConfiguration, activity) { device: NfcYubiKeyDevice ->
             val handle = putDevice(device)
-            emitDeviceAttached(reactContext, device)
+            emitDeviceAttached(handle, device)
         }
     }
 

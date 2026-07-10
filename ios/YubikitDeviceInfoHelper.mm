@@ -21,11 +21,23 @@
     case YKFFormFactorUSBAKeychain:
       formFactor = @"USB_A_KEYCHAIN";
       break;
+    case YKFFormFactorUSBANano:
+      formFactor = @"USB_A_NANO";
+      break;
     case YKFFormFactorUSBCKeychain:
       formFactor = @"USB_C_KEYCHAIN";
       break;
+    case YKFFormFactorUSBCNano:
+      formFactor = @"USB_C_NANO";
+      break;
     case YKFFormFactorUSBCLightning:
       formFactor = @"USB_C_LIGHTNING";
+      break;
+    case YKFFormFactorUSBABio:
+      formFactor = @"USB_A_BIO";
+      break;
+    case YKFFormFactorUSBCBio:
+      formFactor = @"USB_C_BIO";
       break;
     default:
       break;
@@ -34,6 +46,23 @@
 
   result[@"serialNumber"] = @(deviceInfo.serialNumber);
   result[@"isLocked"] = @(deviceInfo.isConfigurationLocked);
+  if (deviceInfo.partNumber != nil) {
+    result[@"partNumber"] = deviceInfo.partNumber;
+  }
+  if (deviceInfo.fpsVersion != nil) {
+    result[@"fpsVersion"] = @{
+      @"major": @(deviceInfo.fpsVersion.major),
+      @"minor": @(deviceInfo.fpsVersion.minor),
+      @"micro": @(deviceInfo.fpsVersion.micro)
+    };
+  }
+  if (deviceInfo.stmVersion != nil) {
+    result[@"stmVersion"] = @{
+      @"major": @(deviceInfo.stmVersion.major),
+      @"minor": @(deviceInfo.stmVersion.minor),
+      @"micro": @(deviceInfo.stmVersion.micro)
+    };
+  }
 
   if (config) {
     NSUInteger usbEnabled = 0;
@@ -84,12 +113,12 @@
     result[@"hasTransportNfc"] = @NO;
   }
 
-  result[@"isFips"] = @NO;
-  result[@"isSky"] = @NO;
-  result[@"fipsCapable"] = @0;
-  result[@"fipsApproved"] = @0;
-  result[@"pinComplexity"] = @NO;
-  result[@"resetBlocked"] = @0;
+  result[@"isFips"] = @(deviceInfo.isFips);
+  result[@"isSky"] = @(deviceInfo.isSky);
+  result[@"fipsCapable"] = @(deviceInfo.isFIPSCapable);
+  result[@"fipsApproved"] = @(deviceInfo.isFIPSApproved);
+  result[@"pinComplexity"] = @(deviceInfo.pinComplexity);
+  result[@"resetBlocked"] = @(deviceInfo.isResetBlocked);
 
   return result;
 }

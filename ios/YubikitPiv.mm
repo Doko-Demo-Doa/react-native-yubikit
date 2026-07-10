@@ -136,21 +136,60 @@ RCT_EXPORT_MODULE(YubikitPiv)
 // The SDK's rawSignOrDecrypt is exposed as two distinct methods (sign / decrypt),
 // while the JS API takes no explicit intent. Decryption is only meaningful for RSA
 // keys in the KEY_MANAGEMENT slot on this SDK (EC keys use ECDH instead), so that
-// combination is treated as decrypt; everything else is treated as sign.
+// combination is treated as decrypt; everything else is treated as sign. (The two
+// paths are mathematically equivalent raw RSA operations when using the "Raw"
+// algorithm variants below, so this choice mainly preserves intent for callers.)
 - (BOOL)isDecryptOperationForSlot:(YKFPIVSlot)pivSlot keyType:(YKFPIVKeyType)pivKeyType {
-  BOOL isRsa = pivKeyType == YKFPIVKeyTypeRSA1024 || pivKeyType == YKFPIVKeyTypeRSA2048 ||
-               pivKeyType == YKFPIVKeyTypeRSA3072 || pivKeyType == YKFPIVKeyTypeRSA4096;
+  BOOL isRsa = pivKeyType == YKFPIVKeyTypeRSA1024 || pivKeyType == YKFPIVKeyTypeRSA2048;
   return isRsa && pivSlot == YKFPIVSlotKeyManagement;
 }
 
+// "Raw"/plain-digest algorithm variants make YKFPIVPadding treat the payload as an
+// already-formed, pass-through block (no extra hashing or padding added), matching
+// the Android SDK's rawSignOrDecrypt, which sends the payload to the card unmodified
+// (aside from the length normalization in normalizedPayload:forKeyType:error: below).
+// Note: YKFPIVPadding only recognizes the SHA-suffixed "Digest" EC constants (they're
+// all treated identically, as pure pass-through) — the unsuffixed
+// kSecKeyAlgorithmECDSASignatureDigestX962 is NOT one of them and would silently
+// zero-pad the payload instead of forwarding it, so it must not be used here.
 - (SecKeyAlgorithm)signAlgorithmForKeyType:(YKFPIVKeyType)pivKeyType {
   switch (pivKeyType) {
     case YKFPIVKeyTypeECCP256:
+      return kSecKeyAlgorithmECDSASignatureDigestX962SHA256;
     case YKFPIVKeyTypeECCP384:
-      return kSecKeyAlgorithmECDSASignatureDigestX962;
+      return kSecKeyAlgorithmECDSASignatureDigestX962SHA384;
     default:
       return kSecKeyAlgorithmRSASignatureRaw;
   }
+}
+
+// Mirrors PivSession.rawSignOrDecrypt on Android: left-pad short payloads with
+// leading zero bytes, truncate long EC payloads, and reject long RSA payloads,
+// before handing off to the card's raw private-key operation.
+- (nullable NSData *)normalizedPayload:(NSData *)payload
+                             forKeyType:(YKFPIVKeyType)pivKeyType
+                                  error:(NSError **)error {
+  NSInteger byteLength = YKFPIVSizeFromKeyType(pivKeyType);
+  if (byteLength <= 0 || payload.length == (NSUInteger)byteLength) {
+    return payload;
+  }
+
+  BOOL isEC = pivKeyType == YKFPIVKeyTypeECCP256 || pivKeyType == YKFPIVKeyTypeECCP384;
+
+  if (payload.length > (NSUInteger)byteLength) {
+    if (isEC) {
+      return [payload subdataWithRange:NSMakeRange(0, (NSUInteger)byteLength)];
+    }
+    if (error) {
+      *error = [NSError errorWithDomain:@"YubikitPiv" code:0
+                                userInfo:@{NSLocalizedDescriptionKey: @"Payload too large for key"}];
+    }
+    return nil;
+  }
+
+  NSMutableData *padded = [NSMutableData dataWithLength:(NSUInteger)byteLength];
+  [payload getBytes:(uint8_t *)padded.mutableBytes + (byteLength - payload.length) length:payload.length];
+  return padded;
 }
 
 #pragma mark - Methods
@@ -678,6 +717,22 @@ RCT_EXPORT_MODULE(YubikitPiv)
   YKFPIVSlot pivSlot = [self slotFromString:slot];
   YKFPIVKeyType pivKeyType = [self keyTypeFromString:keyType];
 
+  // YKFPIVPadding (used internally by signWithKeyInSlot:/decryptWithKeyInSlot:) only
+  // handles RSA1024/RSA2048 — RSA3072/RSA4096 keys can be generated on iOS but can't
+  // be used for raw sign/decrypt via this SDK version, so fail fast with a clear
+  // message instead of a cryptic Security-framework error.
+  if (pivKeyType == YKFPIVKeyTypeRSA3072 || pivKeyType == YKFPIVKeyTypeRSA4096) {
+    reject(@"PIV_ERROR", @"rawSignOrDecrypt for RSA3072/RSA4096 is not supported by the YubiKit iOS SDK", nil);
+    return;
+  }
+
+  NSError *normalizeError = nil;
+  NSData *normalizedPayload = [self normalizedPayload:payloadData forKeyType:pivKeyType error:&normalizeError];
+  if (normalizedPayload == nil) {
+    reject(@"PIV_ERROR", normalizeError ? normalizeError.localizedDescription : @"Invalid payload for key type", normalizeError);
+    return;
+  }
+
   [connection pivSession:^(YKFPIVSession *_Nullable session, NSError *_Nullable error) {
     if (error || session == nil) {
       reject(@"PIV_ERROR", error ? error.localizedDescription : @"PIV session not available", error);
@@ -687,7 +742,7 @@ RCT_EXPORT_MODULE(YubikitPiv)
     if ([self isDecryptOperationForSlot:pivSlot keyType:pivKeyType]) {
       [session decryptWithKeyInSlot:pivSlot
                             algorithm:kSecKeyAlgorithmRSAEncryptionRaw
-                            encrypted:payloadData
+                            encrypted:normalizedPayload
                            completion:^(NSData *_Nullable decrypted, NSError *_Nullable error) {
         if (error || decrypted == nil) {
           reject(@"PIV_ERROR", error ? error.localizedDescription : @"Decryption failed", error);
@@ -699,7 +754,7 @@ RCT_EXPORT_MODULE(YubikitPiv)
       [session signWithKeyInSlot:pivSlot
                               type:pivKeyType
                          algorithm:[self signAlgorithmForKeyType:pivKeyType]
-                           message:payloadData
+                           message:normalizedPayload
                         completion:^(NSData *_Nullable signature, NSError *_Nullable error) {
         if (error || signature == nil) {
           reject(@"PIV_ERROR", error ? error.localizedDescription : @"Signing failed", error);

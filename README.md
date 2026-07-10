@@ -16,15 +16,15 @@ A React Native wrapper around the [YubiKit Android SDK v3](https://developers.yu
 
 ## Platform support
 
-This library targets both Android and iOS, but feature parity is a work in progress. The table below shows where the two platforms differ today.
+This library targets both Android and iOS, but feature parity is a work in progress. The table below shows where the two platforms differ today. iOS support is based on [YubiKit iOS 4.7.0](https://github.com/Yubico/yubikit-ios) (plus a handful of unreleased post-4.7.0 commits).
 
 | Module | Android | iOS | Notes |
 |---|---|---|---|
-| Core | Full | Full | Discovery, connection listing, `closeConnection`, and raw APDU transport (`sendApdu`, via `YKFSmartCardInterface`) are all wrapped on iOS. |
-| Support | Full | Full | `readInfo` and `getName` are both wrapped on iOS. |
-| Management | Full | Partial | `getDeviceInfo` and `updateDeviceConfig` are wrapped on iOS. `setMode` and `deviceReset` are not available in the iOS SDK. |
+| Core | Full | Full | Discovery, connection listing, `closeConnection`, raw APDU transport (`sendApdu`, via `YKFSmartCardInterface`), and `YubiKeyEvent` attach/detach/error notifications are all wrapped on iOS. The accessory-vs-smart-card USB transport distinction the SDK exposes is collapsed to a single `"usb"` transport string, and the SDK's QR-code scanning (`YKFQRReaderSession`) and NFC static-OTP tag reading (`YKFNFCOTPSession`) capabilities aren't exposed through the JS API on either platform. |
+| Support | Full | Full | `readInfo` and `getName` are both wrapped on iOS, including all 8 form factors and the real FIPS/SKY/pin-complexity/reset-blocked fields from `YKFManagementDeviceInfo` (previously some of these were hardcoded to `false`/`0` on iOS). |
+| Management | Full | Partial | `getDeviceInfo` and `updateDeviceConfig` are wrapped on iOS. `deviceReset` is wrapped but only works on YubiKey Bio – Multi-Protocol Edition devices on firmware 5.6+ (the SDK rejects it on any other device); there's no universal factory-reset in the iOS SDK. `setMode` has no iOS SDK equivalent — the same per-transport enable/disable behavior is available through `updateDeviceConfig`. |
 | OATH | Full | Full | The iOS SDK's full OATH feature set is wrapped. |
-| PIV | Full | Full | The iOS SDK's full PIV feature set is wrapped, including PIN/PUK/management-key operations, slot metadata, certificates, attestation, key generation, and raw sign/decrypt. `rawSignOrDecrypt` has no explicit sign-vs-decrypt flag on iOS, so it decrypts for RSA keys in the `KEY_MANAGEMENT` slot and signs otherwise. |
+| PIV | Full | Full | The iOS SDK's full PIV feature set is wrapped, including PIN/PUK/management-key operations, slot metadata, certificates, attestation, key generation, and raw sign/decrypt. `rawSignOrDecrypt` has no explicit sign-vs-decrypt flag on either platform — the payload's own padding determines the semantics — so on iOS it decrypts for RSA keys in the `KEY_MANAGEMENT` slot and signs otherwise (mathematically equivalent raw RSA operations either way). `rawSignOrDecrypt` does not support RSA3072/RSA4096 keys on iOS (the SDK's internal padding helper only handles RSA1024/RSA2048), even though those key sizes can be generated via `generateKey`. |
 | OpenPGP | Full | Not available | The YubiKit iOS SDK does not include an OpenPGP session. |
 | YubiOTP | Full | Partial | `calculateHmacSha1` is wrapped on iOS. Slot configuration, NDEF, serial/version/swap, and delete/put/update are not available in the iOS SDK (it only exposes HMAC-SHA1 challenge-response). |
 | FIDO2 | Full | Partial | `getInfo`, `makeCredential`, `getAssertion`, and `reset` are wrapped on iOS. `getInfo` exposes a smaller field set than Android (only `versions`, `extensions`, `aaguid`, `options`, `maxMsgSize`, `pinUvAuthProtocols`, `minPinLength` — the iOS SDK doesn't report the rest). Credential management (`getCredentialCount`, `getRpIdList`, `getCredentials`, `deleteCredential`, `updateUserInformation`) is not available in the iOS SDK. |

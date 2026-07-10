@@ -72,18 +72,39 @@
 - (NSArray<NSDictionary *> *)listDevices {
   NSMutableArray<NSDictionary *> *result = [NSMutableArray array];
   [self.connections enumerateKeysAndObjectsUsingBlock:^(NSString *handle, id<YKFConnectionProtocol> connection, BOOL *stop) {
-    NSString *transport = self.deviceTransports[handle] ?: @"usb";
-    NSMutableArray<NSString *> *supportedConnections = [NSMutableArray array];
-    if ([connection isKindOfClass:[YKFSmartCardConnection class]] || [connection conformsToProtocol:@protocol(YKFConnectionProtocol)]) {
-      [supportedConnections addObject:@"SmartCardConnection"];
-    }
-    [result addObject:@{
-      @"handle": handle,
-      @"transport": transport,
-      @"supportedConnections": supportedConnections
-    }];
+    [result addObject:[self deviceDictForHandle:handle connection:connection]];
   }];
   return result;
+}
+
+#pragma mark - Event emission
+
+- (NSDictionary *)deviceDictForHandle:(NSString *)handle connection:(id<YKFConnectionProtocol>)connection {
+  NSString *transport = self.deviceTransports[handle] ?: @"usb";
+  NSMutableArray<NSString *> *supportedConnections = [NSMutableArray array];
+  if ([connection isKindOfClass:[YKFSmartCardConnection class]] || [connection conformsToProtocol:@protocol(YKFConnectionProtocol)]) {
+    [supportedConnections addObject:@"SmartCardConnection"];
+  }
+  return @{
+    @"handle": handle,
+    @"transport": transport,
+    @"supportedConnections": supportedConnections
+  };
+}
+
+- (void)emitAttachedForHandle:(NSString *)handle connection:(id<YKFConnectionProtocol>)connection {
+  if (self.eventHandler == nil) return;
+  self.eventHandler(@"attached", @{@"device": [self deviceDictForHandle:handle connection:connection]});
+}
+
+- (void)emitDetachedForHandle:(NSString *)handle {
+  if (self.eventHandler == nil) return;
+  self.eventHandler(@"detached", @{@"handle": handle});
+}
+
+- (void)emitErrorWithMessage:(NSString *)message {
+  if (self.eventHandler == nil) return;
+  self.eventHandler(@"error", @{@"error": message});
 }
 
 #pragma mark - YKFManagerDelegate
@@ -92,6 +113,7 @@
   NSString *handle = [[NSUUID UUID] UUIDString];
   self.connections[handle] = connection;
   self.deviceTransports[handle] = @"nfc";
+  [self emitAttachedForHandle:handle connection:connection];
 }
 
 - (void)didDisconnectNFC:(YKFNFCConnection *)connection error:(NSError *)error {
@@ -102,6 +124,7 @@
   NSString *handle = [[NSUUID UUID] UUIDString];
   self.connections[handle] = connection;
   self.deviceTransports[handle] = @"usb";
+  [self emitAttachedForHandle:handle connection:connection];
 }
 
 - (void)didDisconnectAccessory:(YKFAccessoryConnection *)connection error:(NSError *)error {
@@ -112,6 +135,7 @@
   NSString *handle = [[NSUUID UUID] UUIDString];
   self.connections[handle] = connection;
   self.deviceTransports[handle] = @"usb";
+  [self emitAttachedForHandle:handle connection:connection];
 }
 
 - (void)didDisconnectSmartCard:(YKFSmartCardConnection *)connection error:(NSError *)error API_AVAILABLE(ios(16.0)) {
@@ -119,9 +143,11 @@
 }
 
 - (void)didFailConnectingSmartCard:(NSError *)error {
+  [self emitErrorWithMessage:error.localizedDescription ?: @"Failed to connect smart card"];
 }
 
 - (void)didFailConnectingNFC:(NSError *)error {
+  [self emitErrorWithMessage:error.localizedDescription ?: @"Failed to connect NFC"];
 }
 
 #pragma mark - Private
@@ -131,6 +157,7 @@
   for (NSString *key in keys) {
     [self.connections removeObjectForKey:key];
     [self.deviceTransports removeObjectForKey:key];
+    [self emitDetachedForHandle:key];
   }
 }
 

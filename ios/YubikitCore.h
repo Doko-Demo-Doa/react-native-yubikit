@@ -1,5 +1,5 @@
 #import <YubikitSpec/YubikitSpec.h>
 
-@interface YubikitCore : NSObject <NativeYubikitCoreSpec>
+@interface YubikitCore : NativeYubikitCoreSpecBase <NativeYubikitCoreSpec>
 
 @end

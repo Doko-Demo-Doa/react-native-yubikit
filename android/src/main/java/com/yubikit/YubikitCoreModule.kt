@@ -27,6 +27,10 @@ class YubikitCoreModule(reactContext: ReactApplicationContext) :
 
   private val moduleScope = CoroutineScope(Dispatchers.IO)
 
+  init {
+    YubiKitManagerHolder.setEventHandler { params -> emitOnYubiKeyEvent(params) }
+  }
+
   override fun getName(): String = NAME
 
   @ReactMethod
@@ -39,7 +43,7 @@ class YubikitCoreModule(reactContext: ReactApplicationContext) :
       }
     }
     YubiKitManagerHolder.setUsbConfiguration(usbConfig)
-    YubiKitManagerHolder.startUsbDiscovery(reactApplicationContext)
+    YubiKitManagerHolder.startUsbDiscovery()
   }
 
   @ReactMethod
@@ -68,7 +72,7 @@ class YubikitCoreModule(reactContext: ReactApplicationContext) :
     YubiKitManagerHolder.setNfcConfiguration(nfcConfig)
     val activity = reactApplicationContext.currentActivity
       ?: throw IllegalStateException("No current Activity for NFC discovery")
-    YubiKitManagerHolder.startNfcDiscovery(activity, reactApplicationContext)
+    YubiKitManagerHolder.startNfcDiscovery(activity)
   }
 
   @ReactMethod
@@ -138,16 +142,6 @@ class YubikitCoreModule(reactContext: ReactApplicationContext) :
       array.pushMap(deviceToBundle(handle, device).toWritableMap())
     }
     return array
-  }
-
-  @ReactMethod
-  override fun addListener(eventName: String?) {
-    // Required for NativeEventEmitter
-  }
-
-  @ReactMethod
-  override fun removeListeners(count: Double) {
-    // Required for NativeEventEmitter
   }
 
   companion object {

@@ -45,6 +45,18 @@ export type YubiKeyEvent =
   | { type: 'detached'; handle: string }
   | { type: 'error'; error: string };
 
+/**
+ * Wire shape emitted by the native `onYubiKeyEvent` EventEmitter. Codegen doesn't
+ * support discriminated union payloads, so all variant fields are optional here;
+ * `addYubiKeyListener` narrows this to {@link YubiKeyEvent} for consumers.
+ */
+export interface YubiKeyEventPayload {
+  type: 'attached' | 'detached' | 'error';
+  device?: YubiKeyDevice;
+  handle?: string;
+  error?: string;
+}
+
 /** Core module enums */
 
 export type YubiKeyType = 'YKS' | 'NEO' | 'SKY' | 'YKP' | 'YK4' | 'OTHER';

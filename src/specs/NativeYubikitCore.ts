@@ -1,4 +1,8 @@
-import { TurboModuleRegistry, type TurboModule } from 'react-native';
+import {
+  TurboModuleRegistry,
+  type TurboModule,
+  type CodegenTypes,
+} from 'react-native';
 
 interface UsbConfiguration {
   handlePermissions?: boolean;
@@ -15,6 +19,16 @@ interface YubiKeyDevice {
   handle: string;
   transport: 'usb' | 'nfc';
   supportedConnections: string[];
+}
+
+// Codegen doesn't support discriminated union payloads, so every variant's
+// fields are optional here; consumers get the narrower YubiKeyEvent union
+// via Core.addYubiKeyListener instead of calling this event directly.
+interface YubiKeyEventPayload {
+  type: 'attached' | 'detached' | 'error';
+  device?: YubiKeyDevice;
+  handle?: string;
+  error?: string;
 }
 
 export interface Spec extends TurboModule {
@@ -47,8 +61,8 @@ export interface Spec extends TurboModule {
   /** List devices currently held by the manager. */
   getDiscoveredDevices(): YubiKeyDevice[];
 
-  addListener(eventName: string): void;
-  removeListeners(count: number): void;
+  /** Fires on device attach/detach and discovery-connection failures. */
+  readonly onYubiKeyEvent: CodegenTypes.EventEmitter<YubiKeyEventPayload>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('YubikitCore');

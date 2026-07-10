@@ -7,9 +7,7 @@ import type {
   YubiKeyDevice,
   YubiKeyEvent,
 } from './types';
-import { NativeEventEmitter } from 'react-native';
-
-const eventEmitter = new NativeEventEmitter(NativeYubikitCore);
+import type { EventSubscription } from 'react-native';
 
 export function startUsbDiscovery(config?: UsbConfiguration): void {
   NativeYubikitCore.startUsbDiscovery(config ?? {});
@@ -51,11 +49,10 @@ export function getDiscoveredDevices(): YubiKeyDevice[] {
 
 export function addYubiKeyListener(
   listener: (event: YubiKeyEvent) => void
-): ReturnType<typeof eventEmitter.addListener> {
-  return eventEmitter.addListener(
-    'YubiKeyEvent',
-    listener as (...args: unknown[]) => void
-  );
+): EventSubscription {
+  return NativeYubikitCore.onYubiKeyEvent((payload) => {
+    listener(payload as unknown as YubiKeyEvent);
+  });
 }
 
 export { NativeYubikitCore };

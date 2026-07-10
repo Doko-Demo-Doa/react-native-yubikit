@@ -3,7 +3,13 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef void (^YubikitManagerEventHandler)(NSString *type, NSDictionary * _Nullable payload);
+
 @interface YubikitManager : NSObject <YKFManagerDelegate>
+
+/// Set by YubikitCore while it has JS-side "YubiKeyEvent" listeners registered.
+/// Invoked on device attach/detach/connection-failure so it can be re-emitted to JS.
+@property (nonatomic, copy, nullable) YubikitManagerEventHandler eventHandler;
 
 + (instancetype)shared;
 

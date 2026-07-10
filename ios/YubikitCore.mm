@@ -6,6 +6,21 @@
 
 RCT_EXPORT_MODULE(YubikitCore)
 
+- (instancetype)init {
+  self = [super init];
+  if (self) {
+    __weak YubikitCore *weakSelf = self;
+    [YubikitManager shared].eventHandler = ^(NSString *type, NSDictionary * _Nullable payload) {
+      YubikitCore *strongSelf = weakSelf;
+      if (strongSelf == nil) return;
+      NSMutableDictionary *body = [NSMutableDictionary dictionaryWithDictionary:payload ?: @{}];
+      body[@"type"] = type;
+      [strongSelf emitOnYubiKeyEvent:body];
+    };
+  }
+  return self;
+}
+
 - (void)startUsbDiscovery:(JS::NativeYubikitCore::UsbConfiguration &)config {
   [[YubikitManager shared] startUsbDiscovery];
 }
@@ -77,14 +92,6 @@ RCT_EXPORT_MODULE(YubikitCore)
 
 - (NSArray<NSDictionary *> *)getDiscoveredDevices {
   return [[YubikitManager shared] listDevices];
-}
-
-- (void)addListener:(NSString *)eventName {
-  // Required for NativeEventEmitter
-}
-
-- (void)removeListeners:(double)count {
-  // Required for NativeEventEmitter
 }
 
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:(const facebook::react::ObjCTurboModule::InitParams &)params {
