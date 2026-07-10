@@ -11,20 +11,20 @@ import { NativeEventEmitter } from 'react-native';
 
 const eventEmitter = new NativeEventEmitter(NativeYubikitCore);
 
-export function startUsbDiscovery(config?: UsbConfiguration): Promise<void> {
-  return NativeYubikitCore.startUsbDiscovery(config ?? {});
+export function startUsbDiscovery(config?: UsbConfiguration): void {
+  NativeYubikitCore.startUsbDiscovery(config ?? {});
 }
 
-export function stopUsbDiscovery(): Promise<void> {
-  return NativeYubikitCore.stopUsbDiscovery();
+export function stopUsbDiscovery(): void {
+  NativeYubikitCore.stopUsbDiscovery();
 }
 
-export function startNfcDiscovery(config?: NfcConfiguration): Promise<void> {
-  return NativeYubikitCore.startNfcDiscovery(config ?? {});
+export function startNfcDiscovery(config?: NfcConfiguration): void {
+  NativeYubikitCore.startNfcDiscovery(config ?? {});
 }
 
-export function stopNfcDiscovery(): Promise<void> {
-  return NativeYubikitCore.stopNfcDiscovery();
+export function stopNfcDiscovery(): void {
+  NativeYubikitCore.stopNfcDiscovery();
 }
 
 export function requestConnection(
@@ -41,12 +41,12 @@ export function sendApdu(
   return NativeYubikitCore.sendApdu(connectionHandle, apdu);
 }
 
-export function closeConnection(connectionHandle: string): Promise<void> {
-  return NativeYubikitCore.closeConnection(connectionHandle);
+export function closeConnection(connectionHandle: string): void {
+  NativeYubikitCore.closeConnection(connectionHandle);
 }
 
-export function getDiscoveredDevices(): Promise<YubiKeyDevice[]> {
-  return NativeYubikitCore.getDiscoveredDevices() as Promise<YubiKeyDevice[]>;
+export function getDiscoveredDevices(): YubiKeyDevice[] {
+  return NativeYubikitCore.getDiscoveredDevices() as YubiKeyDevice[];
 }
 
 export function addYubiKeyListener(

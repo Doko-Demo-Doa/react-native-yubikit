@@ -15,7 +15,7 @@ export default function SupportScreen() {
   const identifyDevice = async (device: YubiKeyDevice) => {
     await withBusy(async () => {
       const info = await Support.readInfo(device.handle);
-      const deviceName = await Support.getName(info);
+      const deviceName = Support.getName(info);
       setName(deviceName);
       log(`Identified as ${deviceName}`);
     });

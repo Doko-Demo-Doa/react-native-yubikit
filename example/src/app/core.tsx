@@ -36,7 +36,7 @@ export default function CoreScreen() {
   const closeConnection = async () => {
     if (!connectionHandle) return;
     await withBusy(async () => {
-      await Core.closeConnection(connectionHandle);
+      Core.closeConnection(connectionHandle);
       log(`Closed connection ${connectionHandle}`);
       setConnectionHandle(null);
     });
@@ -44,7 +44,7 @@ export default function CoreScreen() {
 
   const listDevices = async () => {
     await withBusy(async () => {
-      const devices = await Core.getDiscoveredDevices();
+      const devices = Core.getDiscoveredDevices();
       log(`Manager holds ${devices.length} device(s)`);
     });
   };

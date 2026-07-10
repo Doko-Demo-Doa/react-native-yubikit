@@ -1,14 +1,31 @@
 import { TurboModuleRegistry, type TurboModule } from 'react-native';
 
+interface UsbConfiguration {
+  handlePermissions?: boolean;
+}
+
+interface NfcConfiguration {
+  timeout?: number;
+  disableNfcDiscoverySound?: boolean;
+  skipNdefCheck?: boolean;
+  handleUnavailableNfc?: boolean;
+}
+
+interface YubiKeyDevice {
+  handle: string;
+  transport: 'usb' | 'nfc';
+  supportedConnections: string[];
+}
+
 export interface Spec extends TurboModule {
   /** Start listening for USB YubiKeys. */
-  startUsbDiscovery(config?: Object): Promise<void>;
+  startUsbDiscovery(config?: UsbConfiguration): void;
   /** Stop listening for USB YubiKeys. */
-  stopUsbDiscovery(): Promise<void>;
+  stopUsbDiscovery(): void;
   /** Start listening for NFC YubiKeys. */
-  startNfcDiscovery(config?: Object): Promise<void>;
+  startNfcDiscovery(config?: NfcConfiguration): void;
   /** Stop listening for NFC YubiKeys. */
-  stopNfcDiscovery(): Promise<void>;
+  stopNfcDiscovery(): void;
 
   /**
    * Request a connection to a discovered device. The promise resolves with a
@@ -25,10 +42,10 @@ export interface Spec extends TurboModule {
   sendApdu(connectionHandle: string, apdu: string): Promise<string>;
 
   /** Close an opened connection. */
-  closeConnection(connectionHandle: string): Promise<void>;
+  closeConnection(connectionHandle: string): void;
 
   /** List devices currently held by the manager. */
-  getDiscoveredDevices(): Promise<Object[]>;
+  getDiscoveredDevices(): YubiKeyDevice[];
 
   addListener(eventName: string): void;
   removeListeners(count: number): void;

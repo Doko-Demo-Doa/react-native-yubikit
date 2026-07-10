@@ -30,78 +30,52 @@ class YubikitCoreModule(reactContext: ReactApplicationContext) :
   override fun getName(): String = NAME
 
   @ReactMethod
-  override fun startUsbDiscovery(config: ReadableMap?, promise: Promise) {
-    try {
-      YubiKitManagerHolder.initialize(reactApplicationContext)
-      val usbConfig = UsbConfiguration()
-      config?.let {
-        if (it.hasKey("handlePermissions") && !it.isNull("handlePermissions")) {
-          usbConfig.handlePermissions(it.getBoolean("handlePermissions"))
-        }
+  override fun startUsbDiscovery(config: ReadableMap?) {
+    YubiKitManagerHolder.initialize(reactApplicationContext)
+    val usbConfig = UsbConfiguration()
+    config?.let {
+      if (it.hasKey("handlePermissions") && !it.isNull("handlePermissions")) {
+        usbConfig.handlePermissions(it.getBoolean("handlePermissions"))
       }
-      YubiKitManagerHolder.setUsbConfiguration(usbConfig)
-      YubiKitManagerHolder.startUsbDiscovery(reactApplicationContext)
-      promise.resolve(null)
-    } catch (e: Exception) {
-      promise.reject("USB_DISCOVERY_ERROR", e.message, e)
     }
+    YubiKitManagerHolder.setUsbConfiguration(usbConfig)
+    YubiKitManagerHolder.startUsbDiscovery(reactApplicationContext)
   }
 
   @ReactMethod
-  override fun stopUsbDiscovery(promise: Promise) {
-    try {
-      YubiKitManagerHolder.stopUsbDiscovery()
-      promise.resolve(null)
-    } catch (e: Exception) {
-      promise.reject("USB_DISCOVERY_ERROR", e.message, e)
-    }
+  override fun stopUsbDiscovery() {
+    YubiKitManagerHolder.stopUsbDiscovery()
   }
 
   @ReactMethod
-  override fun startNfcDiscovery(config: ReadableMap?, promise: Promise) {
-    try {
-      YubiKitManagerHolder.initialize(reactApplicationContext)
-      val nfcConfig = NfcConfiguration()
-      config?.let {
-        if (it.hasKey("timeout") && !it.isNull("timeout")) {
-          nfcConfig.timeout(it.getInt("timeout"))
-        }
-        if (it.hasKey("disableNfcDiscoverySound") && !it.isNull("disableNfcDiscoverySound")) {
-          nfcConfig.disableNfcDiscoverySound(it.getBoolean("disableNfcDiscoverySound"))
-        }
-        if (it.hasKey("skipNdefCheck") && !it.isNull("skipNdefCheck")) {
-          nfcConfig.skipNdefCheck(it.getBoolean("skipNdefCheck"))
-        }
-        if (it.hasKey("handleUnavailableNfc") && !it.isNull("handleUnavailableNfc")) {
-          nfcConfig.handleUnavailableNfc(it.getBoolean("handleUnavailableNfc"))
-        }
+  override fun startNfcDiscovery(config: ReadableMap?) {
+    YubiKitManagerHolder.initialize(reactApplicationContext)
+    val nfcConfig = NfcConfiguration()
+    config?.let {
+      if (it.hasKey("timeout") && !it.isNull("timeout")) {
+        nfcConfig.timeout(it.getInt("timeout"))
       }
-      YubiKitManagerHolder.setNfcConfiguration(nfcConfig)
-      val activity = reactApplicationContext.currentActivity
-        ?: throw IllegalStateException("No current Activity for NFC discovery")
-      YubiKitManagerHolder.startNfcDiscovery(activity, reactApplicationContext)
-      promise.resolve(null)
-    } catch (e: NfcNotAvailable) {
-      promise.reject(
-        "NFC_NOT_AVAILABLE",
-        e.message,
-        Arguments.createMap().apply { putBoolean("disabled", e.isDisabled) }
-      )
-    } catch (e: Exception) {
-      promise.reject("NFC_DISCOVERY_ERROR", e.message, e)
+      if (it.hasKey("disableNfcDiscoverySound") && !it.isNull("disableNfcDiscoverySound")) {
+        nfcConfig.disableNfcDiscoverySound(it.getBoolean("disableNfcDiscoverySound"))
+      }
+      if (it.hasKey("skipNdefCheck") && !it.isNull("skipNdefCheck")) {
+        nfcConfig.skipNdefCheck(it.getBoolean("skipNdefCheck"))
+      }
+      if (it.hasKey("handleUnavailableNfc") && !it.isNull("handleUnavailableNfc")) {
+        nfcConfig.handleUnavailableNfc(it.getBoolean("handleUnavailableNfc"))
+      }
     }
+    YubiKitManagerHolder.setNfcConfiguration(nfcConfig)
+    val activity = reactApplicationContext.currentActivity
+      ?: throw IllegalStateException("No current Activity for NFC discovery")
+    YubiKitManagerHolder.startNfcDiscovery(activity, reactApplicationContext)
   }
 
   @ReactMethod
-  override fun stopNfcDiscovery(promise: Promise) {
-    try {
-      val activity = reactApplicationContext.currentActivity
-        ?: throw IllegalStateException("No current Activity for NFC discovery")
-      YubiKitManagerHolder.stopNfcDiscovery(activity)
-      promise.resolve(null)
-    } catch (e: Exception) {
-      promise.reject("NFC_DISCOVERY_ERROR", e.message, e)
-    }
+  override fun stopNfcDiscovery() {
+    val activity = reactApplicationContext.currentActivity
+      ?: throw IllegalStateException("No current Activity for NFC discovery")
+    YubiKitManagerHolder.stopNfcDiscovery(activity)
   }
 
   @ReactMethod
@@ -153,26 +127,17 @@ class YubikitCoreModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  override fun closeConnection(connectionHandle: String, promise: Promise) {
-    try {
-      YubiKitManagerHolder.removeConnection(connectionHandle)
-      promise.resolve(null)
-    } catch (e: Exception) {
-      promise.reject("CLOSE_ERROR", e.message, e)
-    }
+  override fun closeConnection(connectionHandle: String) {
+    YubiKitManagerHolder.removeConnection(connectionHandle)
   }
 
   @ReactMethod
-  override fun getDiscoveredDevices(promise: Promise) {
-    try {
-      val array = Arguments.createArray()
-      YubiKitManagerHolder.listDevices().forEach { (handle, device) ->
-        array.pushMap(deviceToBundle(handle, device).toWritableMap())
-      }
-      promise.resolve(array)
-    } catch (e: Exception) {
-      promise.reject("DEVICE_LIST_ERROR", e.message, e)
+  override fun getDiscoveredDevices(): WritableArray {
+    val array = Arguments.createArray()
+    YubiKitManagerHolder.listDevices().forEach { (handle, device) ->
+      array.pushMap(deviceToBundle(handle, device).toWritableMap())
     }
+    return array
   }
 
   @ReactMethod

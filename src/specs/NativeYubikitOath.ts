@@ -1,5 +1,39 @@
 import { TurboModuleRegistry, type TurboModule } from 'react-native';
 
+interface Credential {
+  id: string;
+  oathType: 'HOTP' | 'TOTP';
+  issuer?: string;
+  accountName: string;
+  period: number;
+  touchRequired: boolean;
+}
+
+interface Code {
+  value: string;
+  validFrom: number;
+  validUntil: number;
+}
+
+interface CredentialData {
+  accountName: string;
+  oathType: 'HOTP' | 'TOTP';
+  hashAlgorithm: 'SHA1' | 'SHA256' | 'SHA512';
+  secret: string;
+  digits: number;
+  period: number;
+  counter: number;
+  issuer?: string;
+}
+
+interface OathCredentialsResult {
+  credentials: Credential[];
+}
+
+interface OathCodesResult {
+  codes: Array<{ credential: Credential; code?: Code }>;
+}
+
 export interface Spec extends TurboModule {
   /** Get a stable ID for the OATH application on this device. */
   getDeviceId(deviceHandle: string): Promise<string>;
@@ -32,10 +66,13 @@ export interface Spec extends TurboModule {
   deleteAccessKey(deviceHandle: string): Promise<void>;
 
   /** List stored credentials. */
-  getCredentials(deviceHandle: string): Promise<Object>;
+  getCredentials(deviceHandle: string): Promise<OathCredentialsResult>;
 
   /** Calculate all TOTP codes for the current time. */
-  calculateCodes(deviceHandle: string, timestamp?: number): Promise<Object>;
+  calculateCodes(
+    deviceHandle: string,
+    timestamp?: number
+  ): Promise<OathCodesResult>;
 
   /** Calculate a HOTP response for a credential. */
   calculateResponse(
@@ -49,14 +86,14 @@ export interface Spec extends TurboModule {
     deviceHandle: string,
     credentialId: string,
     timestamp?: number
-  ): Promise<Object>;
+  ): Promise<Code>;
 
   /** Add a new credential. */
   putCredential(
     deviceHandle: string,
-    credentialData: Object,
+    credentialData: CredentialData,
     requireTouch: boolean
-  ): Promise<Object>;
+  ): Promise<Credential>;
 
   /** Delete a credential by ID. */
   deleteCredential(deviceHandle: string, credentialId: string): Promise<void>;
@@ -67,7 +104,7 @@ export interface Spec extends TurboModule {
     credentialId: string,
     newAccountName: string,
     newIssuer?: string
-  ): Promise<Object>;
+  ): Promise<Credential>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('YubikitOath');

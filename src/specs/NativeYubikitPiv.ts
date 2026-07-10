@@ -1,5 +1,37 @@
 import { TurboModuleRegistry, type TurboModule } from 'react-native';
 
+interface PivPinMetadata {
+  attemptsRemaining: number;
+}
+
+interface PivManagementKeyMetadata {
+  keyType: 'TDES' | 'AES128' | 'AES192' | 'AES256';
+  defaultValue: boolean;
+  touchRequired: boolean;
+}
+
+interface PivSlotMetadata {
+  keyType:
+    | 'RSA1024'
+    | 'RSA2048'
+    | 'RSA3072'
+    | 'RSA4096'
+    | 'ECCP256'
+    | 'ECCP384'
+    | 'ED25519'
+    | 'X25519';
+  pinPolicy:
+    'DEFAULT' | 'NEVER' | 'ONCE' | 'ALWAYS' | 'MATCH_ONCE' | 'MATCH_ALWAYS';
+  touchPolicy: 'DEFAULT' | 'NEVER' | 'ALWAYS' | 'CACHED';
+  generated: boolean;
+  publicKey?: string;
+}
+
+interface PivBioMetadata {
+  attemptsRemaining?: number;
+  temporaryPin?: boolean;
+}
+
 export interface Spec extends TurboModule {
   reset(deviceHandle: string): Promise<void>;
   getSerialNumber(deviceHandle: string): Promise<number>;
@@ -31,10 +63,12 @@ export interface Spec extends TurboModule {
     pukAttempts: number
   ): Promise<void>;
 
-  getPinMetadata(deviceHandle: string): Promise<Object>;
-  getPukMetadata(deviceHandle: string): Promise<Object>;
-  getManagementKeyMetadata(deviceHandle: string): Promise<Object>;
-  getSlotMetadata(deviceHandle: string, slot: string): Promise<Object>;
+  getPinMetadata(deviceHandle: string): Promise<PivPinMetadata>;
+  getPukMetadata(deviceHandle: string): Promise<PivPinMetadata>;
+  getManagementKeyMetadata(
+    deviceHandle: string
+  ): Promise<PivManagementKeyMetadata>;
+  getSlotMetadata(deviceHandle: string, slot: string): Promise<PivSlotMetadata>;
 
   getCertificate(deviceHandle: string, slot: string): Promise<string>;
   putCertificate(
@@ -63,7 +97,7 @@ export interface Spec extends TurboModule {
     payload: string
   ): Promise<string>;
 
-  getBioMetadata(deviceHandle: string): Promise<Object>;
+  getBioMetadata(deviceHandle: string): Promise<PivBioMetadata>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('YubikitPiv');

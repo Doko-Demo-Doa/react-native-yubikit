@@ -74,12 +74,12 @@ export function YubiKeyProvider({ children }: { children: ReactNode }) {
   const toggleUsbDiscovery = useCallback(async () => {
     try {
       if (usbActive) {
-        await Core.stopUsbDiscovery();
+        Core.stopUsbDiscovery();
         setDevices([]);
         setUsbActive(false);
         log('Stopped USB discovery');
       } else {
-        await Core.startUsbDiscovery({ handlePermissions: true });
+        Core.startUsbDiscovery({ handlePermissions: true });
         setUsbActive(true);
         log('Started USB discovery — plug in a YubiKey');
       }

@@ -37,14 +37,10 @@ class YubikitSupportModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  override fun getName(info: com.facebook.react.bridge.ReadableMap, keyType: String?, promise: Promise) {
-    try {
-      val deviceInfo = parseDeviceInfo(info)
-      val ykType = keyType?.let { YubiKeyType.valueOf(it) }
-      promise.resolve(DeviceUtil.getName(deviceInfo, ykType))
-    } catch (e: Exception) {
-      promise.reject("SUPPORT_ERROR", e.message, e)
-    }
+  override fun getName(info: com.facebook.react.bridge.ReadableMap, keyType: String?): String {
+    val deviceInfo = parseDeviceInfo(info)
+    val ykType = keyType?.let { YubiKeyType.valueOf(it) }
+    return DeviceUtil.getName(deviceInfo, ykType)
   }
 
   private fun parseDeviceInfo(map: com.facebook.react.bridge.ReadableMap): com.yubico.yubikit.management.DeviceInfo {

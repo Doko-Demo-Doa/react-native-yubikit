@@ -11,10 +11,7 @@ export function readInfo(
   ) as Promise<DeviceInfo>;
 }
 
-export function getName(
-  info: DeviceInfo,
-  keyType?: YubiKeyType
-): Promise<string> {
+export function getName(info: DeviceInfo, keyType?: YubiKeyType): string {
   return NativeYubikitSupport.getName(info, keyType);
 }
 
