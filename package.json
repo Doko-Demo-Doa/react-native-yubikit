@@ -114,6 +114,18 @@
     "jsSrcsDir": "src",
     "android": {
       "javaPackageName": "com.yubikit"
+    },
+    "ios": {
+      "modulesProvider": {
+        "YubikitCore": "YubikitCore",
+        "YubikitManagement": "YubikitManagement",
+        "YubikitOath": "YubikitOath",
+        "YubikitPiv": "YubikitPiv",
+        "YubikitOpenPgp": "YubikitOpenPgp",
+        "YubikitYubiOtp": "YubikitYubiOtp",
+        "YubikitFido": "YubikitFido",
+        "YubikitSupport": "YubikitSupport"
+      }
     }
   },
   "prettier": {
