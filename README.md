@@ -16,18 +16,18 @@ A React Native wrapper around the [YubiKit Android SDK v3](https://developers.yu
 
 ## Platform support
 
-This library targets both Android and iOS, but feature parity is a work in progress.
+This library targets both Android and iOS, but feature parity is a work in progress. The table below shows where the two platforms differ today.
 
 | Module | Android | iOS | Notes |
 |---|---|---|---|
-| Core | Full | Partial | iOS supports USB/NFC discovery, listing devices, and closing connections. `sendApdu` is not yet implemented. |
-| Support | Full | Partial | iOS implements `getName`; `readInfo` is not yet implemented. |
-| Management | Full | Stub | iOS rejects all methods with "Not implemented on iOS". |
-| OATH | Full | Stub | iOS rejects all methods with "Not implemented on iOS". |
-| PIV | Full | Stub | iOS rejects all methods with "Not implemented on iOS". |
-| OpenPGP | Full | Stub | iOS rejects all methods with "Not implemented on iOS". |
-| YubiOTP | Full | Stub | iOS rejects all methods with "Not implemented on iOS". |
-| FIDO2 | Full | Stub | iOS rejects all methods with "Not implemented on iOS". |
+| Core | Full | Full | Discovery, connection listing, `closeConnection`, and raw APDU transport (`sendApdu`, via `YKFSmartCardInterface`) are all wrapped on iOS. |
+| Support | Full | Full | `readInfo` and `getName` are both wrapped on iOS. |
+| Management | Full | Partial | `getDeviceInfo` and `updateDeviceConfig` are wrapped on iOS. `setMode` and `deviceReset` are not available in the iOS SDK. |
+| OATH | Full | Full | The iOS SDK's full OATH feature set is wrapped. |
+| PIV | Full | Full | The iOS SDK's full PIV feature set is wrapped, including PIN/PUK/management-key operations, slot metadata, certificates, attestation, key generation, and raw sign/decrypt. `rawSignOrDecrypt` has no explicit sign-vs-decrypt flag on iOS, so it decrypts for RSA keys in the `KEY_MANAGEMENT` slot and signs otherwise. |
+| OpenPGP | Full | Not available | The YubiKit iOS SDK does not include an OpenPGP session. |
+| YubiOTP | Full | Partial | `calculateHmacSha1` is wrapped on iOS. Slot configuration, NDEF, serial/version/swap, and delete/put/update are not available in the iOS SDK (it only exposes HMAC-SHA1 challenge-response). |
+| FIDO2 | Full | Partial | `getInfo`, `makeCredential`, `getAssertion`, and `reset` are wrapped on iOS. `getInfo` exposes a smaller field set than Android (only `versions`, `extensions`, `aaguid`, `options`, `maxMsgSize`, `pinUvAuthProtocols`, `minPinLength` — the iOS SDK doesn't report the rest). Credential management (`getCredentialCount`, `getRpIdList`, `getCredentials`, `deleteCredential`, `updateUserInformation`) is not available in the iOS SDK. |
 
 ## Installation
 
@@ -47,7 +47,7 @@ pnpm add @doko/react-native-yubikit
 
 - React Native 0.74+ with the New Architecture enabled (Fabric / TurboModules)
 - Android: minSdk 24
-- iOS: partial support (Core discovery and Support helpers only)
+- iOS: partial support; see the platform support table above for per-module gaps (mainly OpenPGP, YubiOTP slot configuration, and FIDO2 credential management)
 
 ### Android permissions
 

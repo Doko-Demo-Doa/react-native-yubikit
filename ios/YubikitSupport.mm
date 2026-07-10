@@ -1,4 +1,5 @@
 #import "YubikitSupport.h"
+#import "YubikitDeviceInfoHelper.h"
 
 @implementation YubikitSupport
 
@@ -8,7 +9,27 @@ RCT_EXPORT_MODULE(YubikitSupport)
              pid:(NSNumber *)pid
          resolve:(RCTPromiseResolveBlock)resolve
           reject:(RCTPromiseRejectBlock)reject {
-  reject(@"SUPPORT_ERROR", @"readInfo is not yet implemented on iOS", nil);
+  id<YKFConnectionProtocol> connection = [[YubikitManager shared] connectionForHandle:deviceHandle];
+  if (connection == nil) {
+    reject(@"CONNECTION_ERROR", @"No device found for handle", nil);
+    return;
+  }
+
+  [connection managementSession:^(YKFManagementSession *_Nullable session, NSError *_Nullable error) {
+    if (error || session == nil) {
+      reject(@"SUPPORT_ERROR", error ? error.localizedDescription : @"Management session not available", error);
+      return;
+    }
+
+    [session getDeviceInfoWithCompletion:^(YKFManagementDeviceInfo *_Nullable deviceInfo, NSError *_Nullable error) {
+      if (error || deviceInfo == nil) {
+        reject(@"SUPPORT_ERROR", error ? error.localizedDescription : @"Failed to read device info", error);
+        return;
+      }
+
+      resolve([YubikitDeviceInfoHelper dictionaryFromDeviceInfo:deviceInfo]);
+    }];
+  }];
 }
 
 - (NSString *)getName:(JS::NativeYubikitSupport::DeviceInfo &)info
