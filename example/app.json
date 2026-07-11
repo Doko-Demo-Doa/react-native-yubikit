@@ -24,13 +24,11 @@
       },
       "package": "yubikit.example"
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
     "scheme": "yubikit-example",
     "plugins": [
       "expo-router",
-      "expo-status-bar"
+      "expo-status-bar",
+      "./plugins/withYubiKitPodfile.js"
     ],
     "experiments": {
       "typedRoutes": true

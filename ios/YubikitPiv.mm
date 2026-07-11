@@ -163,13 +163,29 @@ RCT_EXPORT_MODULE(YubikitPiv)
   }
 }
 
+// YKFPIVKeyType.h declares this as a plain C function with no `extern "C"` guard,
+// so calling it from Objective-C++ (.mm) applies C++ name mangling that doesn't
+// match the C-linkage symbol the SDK actually exports, causing an undefined-symbol
+// link error. Reimplement it locally instead (values match YKFPIVSizeFromKeyType).
+- (NSInteger)byteLengthForKeyType:(YKFPIVKeyType)pivKeyType {
+  switch (pivKeyType) {
+    case YKFPIVKeyTypeECCP256: return 256 / 8;
+    case YKFPIVKeyTypeECCP384: return 384 / 8;
+    case YKFPIVKeyTypeRSA1024: return 1024 / 8;
+    case YKFPIVKeyTypeRSA2048: return 2048 / 8;
+    case YKFPIVKeyTypeRSA3072: return 3072 / 8;
+    case YKFPIVKeyTypeRSA4096: return 4096 / 8;
+    default: return 0;
+  }
+}
+
 // Mirrors PivSession.rawSignOrDecrypt on Android: left-pad short payloads with
 // leading zero bytes, truncate long EC payloads, and reject long RSA payloads,
 // before handing off to the card's raw private-key operation.
 - (nullable NSData *)normalizedPayload:(NSData *)payload
                              forKeyType:(YKFPIVKeyType)pivKeyType
                                   error:(NSError **)error {
-  NSInteger byteLength = YKFPIVSizeFromKeyType(pivKeyType);
+  NSInteger byteLength = [self byteLengthForKeyType:pivKeyType];
   if (byteLength <= 0 || payload.length == (NSUInteger)byteLength) {
     return payload;
   }
