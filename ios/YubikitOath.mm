@@ -439,7 +439,7 @@ RCT_EXPORT_MODULE(YubikitOath)
     return;
   }
 
-  YKFOATHCredentialTemplate *template = [[YKFOATHCredentialTemplate alloc]
+  YKFOATHCredentialTemplate *credentialTemplate = [[YKFOATHCredentialTemplate alloc]
     initWithType:[self oathTypeFromString:credentialData.oathType()]
        algorithm:[self algorithmFromString:credentialData.hashAlgorithm()]
           secret:secret
@@ -449,7 +449,7 @@ RCT_EXPORT_MODULE(YubikitOath)
           period:(NSUInteger)credentialData.period()
          counter:(UInt32)credentialData.counter()];
 
-  if (template == nil) {
+  if (credentialTemplate == nil) {
     reject(@"OATH_ERROR", @"Invalid credential data", nil);
     return;
   }
@@ -459,7 +459,7 @@ RCT_EXPORT_MODULE(YubikitOath)
       reject(@"OATH_ERROR", error ? error.localizedDescription : @"OATH session not available", error);
       return;
     }
-    [session putCredentialTemplate:template requiresTouch:requireTouch completion:^(NSError *_Nullable error) {
+    [session putCredentialTemplate:credentialTemplate requiresTouch:requireTouch completion:^(NSError *_Nullable error) {
       if (error) {
         reject(@"OATH_ERROR", error.localizedDescription, error);
         return;

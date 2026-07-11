@@ -1,5 +1,7 @@
 #import "YubikitSupport.h"
 #import "YubikitDeviceInfoHelper.h"
+#import "YubikitManager.h"
+#import <YubiKit/YubiKit.h>
 
 @implementation YubikitSupport
 
