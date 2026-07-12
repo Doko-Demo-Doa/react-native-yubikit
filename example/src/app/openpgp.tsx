@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { ScrollView } from 'react-native';
 import { Button, Card, ListGroup } from 'heroui-native';
 import { OpenPgp } from 'react-native-yubikit';
 import type { Version } from 'react-native-yubikit';
@@ -8,6 +7,7 @@ import { DeviceBanner } from '@/components/DeviceBanner';
 import { LabeledInput } from '@/components/LabeledInput';
 import { LogPanel } from '@/components/LogPanel';
 import { useYubiKey } from '@/context/YubiKeyContext';
+import { MasterLayout } from '@/components/layouts/MasterLayout';
 
 export default function OpenPgpScreen() {
   const { selectedDevice, log, withBusy, isBusy } = useYubiKey();
@@ -44,10 +44,7 @@ export default function OpenPgpScreen() {
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-background"
-      contentContainerClassName="p-4"
-    >
+    <MasterLayout>
       <ScreenHeader
         title="OpenPGP"
         description="PIN verification and application metadata."
@@ -55,10 +52,7 @@ export default function OpenPgpScreen() {
 
       <DeviceBanner />
 
-      <Card className="mb-4">
-        <Card.Header>
-          <Card.Title>User PIN</Card.Title>
-        </Card.Header>
+      <Card className="mb-4 gap-4">
         <Card.Body>
           <LabeledInput
             label="PIN"
@@ -126,6 +120,6 @@ export default function OpenPgpScreen() {
       </Card>
 
       <LogPanel />
-    </ScrollView>
+    </MasterLayout>
   );
 }

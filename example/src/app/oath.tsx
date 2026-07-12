@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import { Oath } from 'react-native-yubikit';
 import type { Credential } from 'react-native-yubikit';
 import {
@@ -21,6 +21,7 @@ import { DeviceBanner } from '@/components/DeviceBanner';
 import { LabeledInput } from '@/components/LabeledInput';
 import { LogPanel } from '@/components/LogPanel';
 import { useYubiKey } from '@/context/YubiKeyContext';
+import { MasterLayout } from '@/components/layouts/MasterLayout';
 
 export default function OathScreen() {
   const { selectedDevice, log, withBusy, isBusy } = useYubiKey();
@@ -90,10 +91,7 @@ export default function OathScreen() {
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-background"
-      contentContainerClassName="p-4"
-    >
+    <MasterLayout>
       <ScreenHeader
         title="OATH"
         description="TOTP/HOTP credential storage and code calculation."
@@ -223,6 +221,6 @@ export default function OathScreen() {
       </Card>
 
       <LogPanel />
-    </ScrollView>
+    </MasterLayout>
   );
 }

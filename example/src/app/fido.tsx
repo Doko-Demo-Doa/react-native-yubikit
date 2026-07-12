@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { ScrollView } from 'react-native';
 import { Button, Card, ListGroup } from 'heroui-native';
 import { Fido } from 'react-native-yubikit';
 import type { Ctap2Info } from 'react-native-yubikit';
@@ -8,6 +7,7 @@ import { DeviceBanner } from '@/components/DeviceBanner';
 import { LabeledInput } from '@/components/LabeledInput';
 import { LogPanel } from '@/components/LogPanel';
 import { useYubiKey } from '@/context/YubiKeyContext';
+import { MasterLayout } from '@/components/layouts/MasterLayout';
 
 export default function FidoScreen() {
   const { selectedDevice, log, withBusy, isBusy } = useYubiKey();
@@ -37,10 +37,7 @@ export default function FidoScreen() {
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-background"
-      contentContainerClassName="p-4"
-    >
+    <MasterLayout>
       <ScreenHeader
         title="FIDO2 / WebAuthn"
         description="Authenticator info and resident credential management."
@@ -125,6 +122,6 @@ export default function FidoScreen() {
       </Card>
 
       <LogPanel />
-    </ScrollView>
+    </MasterLayout>
   );
 }

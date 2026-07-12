@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { ScrollView } from 'react-native';
 import { Management } from 'react-native-yubikit';
 import type { DeviceInfo } from 'react-native-yubikit';
 import {
@@ -20,6 +19,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { DeviceBanner } from '@/components/DeviceBanner';
 import { LogPanel } from '@/components/LogPanel';
 import { useYubiKey } from '@/context/YubiKeyContext';
+import { MasterLayout } from '@/components/layouts/MasterLayout';
 
 export default function ManagementScreen() {
   const { selectedDevice, log, withBusy, isBusy } = useYubiKey();
@@ -43,10 +43,7 @@ export default function ManagementScreen() {
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-background"
-      contentContainerClassName="p-4"
-    >
+    <MasterLayout>
       <ScreenHeader
         title="Management"
         description="Read device metadata and toggle enabled interfaces."
@@ -127,6 +124,6 @@ export default function ManagementScreen() {
       </Card>
 
       <LogPanel />
-    </ScrollView>
+    </MasterLayout>
   );
 }

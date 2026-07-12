@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { ScrollView } from 'react-native';
 import { Chip } from 'heroui-native';
 import { Piv } from 'react-native-yubikit';
 import type { PivSlotMetadata } from 'react-native-yubikit';
@@ -21,6 +20,7 @@ import { DeviceBanner } from '@/components/DeviceBanner';
 import { LabeledInput } from '@/components/LabeledInput';
 import { LogPanel } from '@/components/LogPanel';
 import { useYubiKey } from '@/context/YubiKeyContext';
+import { MasterLayout } from '@/components/layouts/MasterLayout';
 
 const SLOTS = [
   'AUTHENTICATION',
@@ -80,10 +80,7 @@ export default function PivScreen() {
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-background"
-      contentContainerClassName="p-4"
-    >
+    <MasterLayout>
       <ScreenHeader
         title="PIV"
         description="Smart-card PIN, slot metadata and key generation."
@@ -178,6 +175,6 @@ export default function PivScreen() {
       </Card>
 
       <LogPanel />
-    </ScrollView>
+    </MasterLayout>
   );
 }
