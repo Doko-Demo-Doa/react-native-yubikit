@@ -2,7 +2,13 @@ package com.yubikit
 
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
+import com.yubico.yubikit.android.transport.usb.UsbYubiKeyDevice
+import com.yubico.yubikit.core.Transport
+import com.yubico.yubikit.core.UsbPid
 import com.yubico.yubikit.core.YubiKeyType
+import com.yubico.yubikit.core.fido.FidoConnection
+import com.yubico.yubikit.core.otp.OtpConnection
+import com.yubico.yubikit.core.smartcard.SmartCardConnection
 import com.yubico.yubikit.support.DeviceUtil
 import com.yubikit.utils.YubikitUtils.deviceInfoToMap
 import com.yubikit.utils.YubikitUtils.formFactorToString
@@ -22,11 +28,28 @@ class YubikitSupportModule(reactContext: ReactApplicationContext) :
   override fun readInfo(deviceHandle: String, pid: Double?, promise: Promise) {
     moduleScope.launch {
       try {
-        val connection = YubiKitManagerHolder.getConnection(deviceHandle)
-        val info = DeviceUtil.readInfo(
-          connection,
-          pid?.toInt()?.let { com.yubico.yubikit.core.UsbPid.fromValue(it) }
-        )
+        val device = YubiKitManagerHolder.getDevice(deviceHandle)
+        // The USB PID is required by DeviceUtil.readInfo whenever the connection is
+        // over USB. Prefer an explicitly supplied pid, but fall back to the one the
+        // Android USB device itself already knows, since callers shouldn't need to
+        // plumb this Android-specific detail through the JS API.
+        val usbPid = pid?.toInt()?.let { UsbPid.fromValue(it) }
+          ?: (device as? UsbYubiKeyDevice)?.pid
+        val info = when {
+          device.supportsConnection(SmartCardConnection::class.java) ->
+            YubiKitManagerHolder.withSmartCard(deviceHandle) { connection ->
+              DeviceUtil.readInfo(connection, usbPid)
+            }
+          device.supportsConnection(OtpConnection::class.java) ->
+            YubiKitManagerHolder.withOtp(deviceHandle) { connection ->
+              DeviceUtil.readInfo(connection, usbPid)
+            }
+          device.supportsConnection(FidoConnection::class.java) ->
+            YubiKitManagerHolder.withFido(deviceHandle) { connection ->
+              DeviceUtil.readInfo(connection, usbPid)
+            }
+          else -> throw IllegalArgumentException("Device does not support any known connection type")
+        }
         promise.resolve(deviceInfoToMap(info))
       } catch (e: Exception) {
         promise.reject("SUPPORT_ERROR", e.message, e)
@@ -55,6 +78,20 @@ class YubikitSupportModule(reactContext: ReactApplicationContext) :
     }
     builder.isLocked(map.getBoolean("isLocked"))
     builder.isFips(map.getBoolean("isFips"))
+    // getName() relies on hasTransport(Transport.NFC)/(USB), which in turn is just
+    // "does the map below contain this key" - if this isn't reconstructed here,
+    // hasTransport() is always false for every transport and getName() can never
+    // report NFC-capable devices correctly, regardless of the real hardware.
+    val supportedCapabilities = mutableMapOf<Transport, Int>()
+    map.getMap("supportedCapabilities")?.let { caps ->
+      if (caps.hasKey("usb") && !caps.isNull("usb")) {
+        supportedCapabilities[Transport.USB] = caps.getInt("usb")
+      }
+      if (caps.hasKey("nfc") && !caps.isNull("nfc")) {
+        supportedCapabilities[Transport.NFC] = caps.getInt("nfc")
+      }
+    }
+    builder.supportedCapabilities(supportedCapabilities)
     // DeviceInfo.Builder may not expose all setters; this is a best-effort reconstruction.
     return builder.build()
   }
