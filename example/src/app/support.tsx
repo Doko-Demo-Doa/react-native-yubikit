@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { Button, Card, ListGroup } from 'heroui-native';
 import { Support, type YubiKeyDevice } from 'react-native-yubikit';
 
-import { ScreenHeader } from '../components/ScreenHeader';
-import { DeviceBanner } from '../components/DeviceBanner';
-import { LogPanel } from '../components/LogPanel';
-import { useYubiKey } from '../context/YubiKeyContext';
+import { ScreenHeader } from '@/components/ScreenHeader';
+import { DeviceBanner } from '@/components/DeviceBanner';
+import { LogPanel } from '@/components/LogPanel';
+import { useYubiKey } from '@/context/YubiKeyContext';
 import { MasterLayout } from '@/components/layouts/MasterLayout';
 
 export default function SupportScreen() {

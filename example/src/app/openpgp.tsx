@@ -3,11 +3,11 @@ import { ScrollView } from 'react-native';
 import { Button, Card, ListGroup } from 'heroui-native';
 import { OpenPgp } from 'react-native-yubikit';
 import type { Version } from 'react-native-yubikit';
-import { ScreenHeader } from '../components/ScreenHeader';
-import { DeviceBanner } from '../components/DeviceBanner';
-import { LabeledInput } from '../components/LabeledInput';
-import { LogPanel } from '../components/LogPanel';
-import { useYubiKey } from '../context/YubiKeyContext';
+import { ScreenHeader } from '@/components/ScreenHeader';
+import { DeviceBanner } from '@/components/DeviceBanner';
+import { LabeledInput } from '@/components/LabeledInput';
+import { LogPanel } from '@/components/LogPanel';
+import { useYubiKey } from '@/context/YubiKeyContext';
 
 export default function OpenPgpScreen() {
   const { selectedDevice, log, withBusy, isBusy } = useYubiKey();

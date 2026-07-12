@@ -10,11 +10,11 @@ import {
   CardHeader,
   CardTitle,
   Paragraph,
-} from '../components/heroui';
+} from '@/components/heroui';
 import { Core } from 'react-native-yubikit';
-import { DeviceBanner } from '../components/DeviceBanner';
-import { LogPanel } from '../components/LogPanel';
-import { useYubiKey } from '../context/YubiKeyContext';
+import { DeviceBanner } from '@/components/DeviceBanner';
+import { LogPanel } from '@/components/LogPanel';
+import { useYubiKey } from '@/context/YubiKeyContext';
 import { MasterLayout } from '@/components/layouts/MasterLayout';
 
 export default function CoreScreen() {

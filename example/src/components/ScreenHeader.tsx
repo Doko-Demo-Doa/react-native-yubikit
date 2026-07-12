@@ -1,5 +1,5 @@
 import { View } from 'react-native';
-import { Heading, Paragraph } from './heroui';
+import { Heading, Paragraph } from '@/components/heroui';
 
 export function ScreenHeader({
   title,

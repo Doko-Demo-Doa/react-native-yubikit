@@ -1,7 +1,7 @@
 import { ScrollView } from 'react-native';
 import { Surface } from 'heroui-native';
-import { Button, Paragraph } from './heroui';
-import { useYubiKey } from '../context/YubiKeyContext';
+import { Button, Paragraph } from '@/components/heroui';
+import { useYubiKey } from '@/context/YubiKeyContext';
 
 export function LogPanel() {
   const { logs, clearLogs } = useYubiKey();

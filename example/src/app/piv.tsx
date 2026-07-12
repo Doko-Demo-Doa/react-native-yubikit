@@ -15,12 +15,12 @@ import {
   ListGroupItemContent,
   ListGroupItemDescription,
   ListGroupItemTitle,
-} from '../components/heroui';
-import { ScreenHeader } from '../components/ScreenHeader';
-import { DeviceBanner } from '../components/DeviceBanner';
-import { LabeledInput } from '../components/LabeledInput';
-import { LogPanel } from '../components/LogPanel';
-import { useYubiKey } from '../context/YubiKeyContext';
+} from '@/components/heroui';
+import { ScreenHeader } from '@/components/ScreenHeader';
+import { DeviceBanner } from '@/components/DeviceBanner';
+import { LabeledInput } from '@/components/LabeledInput';
+import { LogPanel } from '@/components/LogPanel';
+import { useYubiKey } from '@/context/YubiKeyContext';
 
 const SLOTS = [
   'AUTHENTICATION',

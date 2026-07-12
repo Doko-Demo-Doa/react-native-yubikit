@@ -8,8 +8,8 @@ import {
   CardHeader,
   CardTitle,
   Paragraph,
-} from './heroui';
-import { useYubiKey } from '../context/YubiKeyContext';
+} from '@/components/heroui';
+import { useYubiKey } from '@/context/YubiKeyContext';
 
 export function DeviceBanner() {
   const {

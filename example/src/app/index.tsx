@@ -8,9 +8,9 @@ import {
   ListGroupItemSuffix,
   ListGroupItemTitle,
   Paragraph,
-} from '../components/heroui';
-import { DeviceBanner } from '../components/DeviceBanner';
-import { LogPanel } from '../components/LogPanel';
+} from '@/components/heroui';
+import { DeviceBanner } from '@/components/DeviceBanner';
+import { LogPanel } from '@/components/LogPanel';
 import { MasterLayout } from '@/components/layouts/MasterLayout';
 
 const FEATURES = [
