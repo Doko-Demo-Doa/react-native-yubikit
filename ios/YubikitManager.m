@@ -81,10 +81,15 @@
 
 - (NSDictionary *)deviceDictForHandle:(NSString *)handle connection:(id<YKFConnectionProtocol>)connection {
   NSString *transport = self.deviceTransports[handle] ?: @"usb";
-  NSMutableArray<NSString *> *supportedConnections = [NSMutableArray array];
-  if ([connection isKindOfClass:[YKFSmartCardConnection class]] || [connection conformsToProtocol:@protocol(YKFConnectionProtocol)]) {
-    [supportedConnections addObject:@"SmartCardConnection"];
-  }
+  // Every YKFConnectionProtocol-conforming connection (NFC/Accessory/SmartCard) exposes
+  // the same set of session accessors (oathSession/pivSession/fido2Session/
+  // challengeResponseSession/managementSession) regardless of transport - unlike
+  // Android, where SmartCardConnection/OtpConnection/FidoConnection are distinct
+  // connection objects that a device may or may not support. The previous check here
+  // (`isKindOfClass:[YKFSmartCardConnection class]] || conformsToProtocol:...`) was a
+  // tautology, since every value in `connections` already conforms to the protocol by
+  // its declared type - it always reported only SmartCardConnection.
+  NSArray<NSString *> *supportedConnections = @[@"SmartCardConnection", @"OtpConnection", @"FidoConnection"];
   return @{
     @"handle": handle,
     @"transport": transport,

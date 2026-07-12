@@ -65,41 +65,25 @@
   }
 
   if (config) {
-    NSUInteger usbEnabled = 0;
-    NSUInteger nfcEnabled = 0;
-    NSUInteger usbSupported = 0;
-    NSUInteger nfcSupported = 0;
-
-    YKFManagementApplicationType apps[] = {
-      YKFManagementApplicationTypeOTP,
-      YKFManagementApplicationTypeU2F,
-      YKFManagementApplicationTypeOPGP,
-      YKFManagementApplicationTypePIV,
-      YKFManagementApplicationTypeOATH,
-      YKFManagementApplicationTypeCTAP2
-    };
-
-    for (NSUInteger i = 0; i < sizeof(apps) / sizeof(apps[0]); i++) {
-      YKFManagementApplicationType app = apps[i];
-      if ([config isEnabled:app overTransport:YKFManagementTransportTypeUSB]) {
-        usbEnabled |= app;
-      }
-      if ([config isSupported:app overTransport:YKFManagementTransportTypeUSB]) {
-        usbSupported |= app;
-      }
-      if ([config isEnabled:app overTransport:YKFManagementTransportTypeNFC]) {
-        nfcEnabled |= app;
-      }
-      if ([config isSupported:app overTransport:YKFManagementTransportTypeNFC]) {
-        nfcSupported |= app;
-      }
-    }
+    // Read the raw bitmasks directly rather than re-deriving them by iterating a
+    // hardcoded list of YKFManagementApplicationType values - that list previously
+    // omitted YKFManagementApplicationTypeHSMAUTH, silently zeroing that bit for
+    // every device regardless of actual capability.
+    NSUInteger usbSupported = config.usbSupportedMask;
+    NSUInteger nfcSupported = config.nfcSupportedMask;
+    NSUInteger usbEnabled = config.usbEnabledMask;
+    NSUInteger nfcEnabled = config.nfcEnabledMask;
 
     result[@"config"] = @{
       @"enabledCapabilities": @{
         @"usb": @(usbEnabled),
         @"nfc": @(nfcEnabled)
-      }
+      },
+      @"autoEjectTimeout": @(config.autoEjectTimeout),
+      @"challengeResponseTimeout": @(config.challengeResponseTimeout),
+      @"nfcRestricted": @(config.isNFCRestricted)
+      // deviceFlags has no public accessor on YKFManagementInterfaceConfiguration in
+      // this SDK version, so it can't be populated here (matches Android parity gap).
     };
     result[@"supportedCapabilities"] = @{
       @"usb": @(usbSupported),

@@ -88,10 +88,7 @@ export default function PivScreen() {
 
       <DeviceBanner />
 
-      <Card className="mb-4">
-        <CardHeader>
-          <CardTitle>PIN</CardTitle>
-        </CardHeader>
+      <Card className="mb-4 gap-4">
         <CardBody className="gap-2">
           <LabeledInput
             label="PIN"

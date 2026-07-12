@@ -96,6 +96,14 @@ RCT_EXPORT_MODULE(YubikitFido)
   id<YKFConnectionProtocol> connection = [self connectionForHandle:deviceHandle reject:reject];
   if (!connection) return;
 
+  // YKFFIDO2Session has no enterprise-attestation option in this SDK version (only
+  // YKFFIDO2OptionRK/UV/UP exist) - reject explicitly rather than silently proceeding
+  // as a normal, non-enterprise attestation request.
+  if (enterpriseAttestation != nil) {
+    reject(@"FIDO_ERROR", @"enterpriseAttestation is not supported by the YubiKit iOS SDK", nil);
+    return;
+  }
+
   NSData *challengeData = [self base64Decode:options.challenge()];
   if (challengeData == nil) {
     reject(@"FIDO_ERROR", @"Invalid base64 challenge", nil);

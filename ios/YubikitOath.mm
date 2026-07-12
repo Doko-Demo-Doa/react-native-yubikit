@@ -135,10 +135,17 @@ RCT_EXPORT_MODULE(YubikitOath)
       reject(@"OATH_ERROR", error ? error.localizedDescription : @"OATH session not available", error);
       return;
     }
-    // The iOS SDK does not expose this directly. Infer from listCredentials failure.
+    // The iOS SDK does not expose "is a password configured" directly. The only signal
+    // available through public API is YKFOATHErrorCodeAuthenticationRequired from a
+    // command that needs auth, which proves a password IS set - but a *lack* of that
+    // error only proves the session isn't currently locked, not that no password was
+    // ever configured (it may have already been unlocked earlier in this connection's
+    // lifetime; see unlockWithPassword's docs). So this can under-report true here.
     [session listCredentialsWithCompletion:^(NSArray<YKFOATHCredential *> *_Nullable credentials, NSError *_Nullable error) {
-      if (error) {
+      if (error && [error isKindOfClass:[YKFOATHError class]] && error.code == YKFOATHErrorCodeAuthenticationRequired) {
         resolve(@YES);
+      } else if (error) {
+        reject(@"OATH_ERROR", error.localizedDescription, error);
       } else {
         resolve(@NO);
       }
@@ -157,10 +164,13 @@ RCT_EXPORT_MODULE(YubikitOath)
       reject(@"OATH_ERROR", error ? error.localizedDescription : @"OATH session not available", error);
       return;
     }
-    // The iOS SDK does not expose this directly. Infer from listCredentials failure.
+    // Unlike isAccessKeySet, this only cares about the session's *current* auth state,
+    // which YKFOATHErrorCodeAuthenticationRequired answers precisely and reliably.
     [session listCredentialsWithCompletion:^(NSArray<YKFOATHCredential *> *_Nullable credentials, NSError *_Nullable error) {
-      if (error) {
+      if (error && [error isKindOfClass:[YKFOATHError class]] && error.code == YKFOATHErrorCodeAuthenticationRequired) {
         resolve(@YES);
+      } else if (error) {
+        reject(@"OATH_ERROR", error.localizedDescription, error);
       } else {
         resolve(@NO);
       }

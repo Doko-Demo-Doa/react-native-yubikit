@@ -61,40 +61,50 @@ RCT_EXPORT_MODULE(YubikitManagement)
       if (enabledCaps.has_value()) {
         std::optional<double> usbCaps = enabledCaps.value().usb();
         std::optional<double> nfcCaps = enabledCaps.value().nfc();
-
-        YKFManagementApplicationType apps[] = {
-          YKFManagementApplicationTypeOTP,
-          YKFManagementApplicationTypeU2F,
-          YKFManagementApplicationTypeOPGP,
-          YKFManagementApplicationTypePIV,
-          YKFManagementApplicationTypeOATH,
-          YKFManagementApplicationTypeCTAP2
-        };
-
+        // Assign the raw bitmask directly - iterating a hardcoded application list (as
+        // done previously) drops any bit not enumerated there (e.g. HSMAUTH), silently
+        // failing to apply part of what the caller asked for.
         if (usbCaps.has_value()) {
-          NSUInteger usbValue = (NSUInteger)usbCaps.value();
-          for (NSUInteger i = 0; i < sizeof(apps) / sizeof(apps[0]); i++) {
-            BOOL enabled = (usbValue & apps[i]) != 0;
-            [interfaceConfig setEnabled:enabled application:apps[i] overTransport:YKFManagementTransportTypeUSB];
-          }
+          interfaceConfig.usbEnabledMask = (NSUInteger)usbCaps.value();
         }
-
         if (nfcCaps.has_value()) {
-          NSUInteger nfcValue = (NSUInteger)nfcCaps.value();
-          for (NSUInteger i = 0; i < sizeof(apps) / sizeof(apps[0]); i++) {
-            BOOL enabled = (nfcValue & apps[i]) != 0;
-            [interfaceConfig setEnabled:enabled application:apps[i] overTransport:YKFManagementTransportTypeNFC];
-          }
+          interfaceConfig.nfcEnabledMask = (NSUInteger)nfcCaps.value();
         }
       }
 
-      [session writeConfiguration:interfaceConfig reboot:reboot completion:^(NSError *_Nullable error) {
+      std::optional<double> autoEjectTimeout = config.autoEjectTimeout();
+      if (autoEjectTimeout.has_value()) {
+        interfaceConfig.autoEjectTimeout = autoEjectTimeout.value();
+      }
+      std::optional<double> challengeResponseTimeout = config.challengeResponseTimeout();
+      if (challengeResponseTimeout.has_value()) {
+        interfaceConfig.challengeResponseTimeout = challengeResponseTimeout.value();
+      }
+      std::optional<bool> nfcRestricted = config.nfcRestricted();
+      if (nfcRestricted.has_value()) {
+        interfaceConfig.isNFCRestricted = nfcRestricted.value();
+      }
+
+      NSData *currentLockCodeData = currentLockCode != nil
+        ? [[NSData alloc] initWithBase64EncodedString:currentLockCode options:0]
+        : nil;
+      NSData *newLockCodeData = newLockCode != nil
+        ? [[NSData alloc] initWithBase64EncodedString:newLockCode options:0]
+        : nil;
+
+      YKFManagementSessionWriteCompletionBlock completion = ^(NSError *_Nullable error) {
         if (error) {
           reject(@"MANAGEMENT_ERROR", error.localizedDescription, error);
           return;
         }
         resolve(nil);
-      }];
+      };
+
+      if (currentLockCodeData != nil || newLockCodeData != nil) {
+        [session writeConfiguration:interfaceConfig reboot:reboot lockCode:currentLockCodeData newLockCode:newLockCodeData completion:completion];
+      } else {
+        [session writeConfiguration:interfaceConfig reboot:reboot completion:completion];
+      }
     }];
   }];
 }
