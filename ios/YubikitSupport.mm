@@ -37,9 +37,13 @@ RCT_EXPORT_MODULE(YubikitSupport)
 - (NSString *)getName:(JS::NativeYubikitSupport::DeviceInfo &)info
               keyType:(NSString *)keyType {
   NSString *formFactor = info.formFactor();
-  if ([formFactor isEqualToString:@"USB_A_KEYCHAIN"]) return @"YubiKey 5 NFC";
+  // USB_A_KEYCHAIN and USB_C_KEYCHAIN are shared by both NFC and non-NFC Yubico
+  // SKUs, so form factor alone can't tell them apart - hasTransportNfc must be
+  // checked, same as the Android SDK's own DeviceUtil.getName() does.
+  BOOL hasNfc = info.hasTransportNfc();
+  if ([formFactor isEqualToString:@"USB_A_KEYCHAIN"]) return hasNfc ? @"YubiKey 5 NFC" : @"YubiKey 5 A";
   if ([formFactor isEqualToString:@"USB_A_NANO"]) return @"YubiKey 5 Nano";
-  if ([formFactor isEqualToString:@"USB_C_KEYCHAIN"]) return @"YubiKey 5C NFC";
+  if ([formFactor isEqualToString:@"USB_C_KEYCHAIN"]) return hasNfc ? @"YubiKey 5C NFC" : @"YubiKey 5C";
   if ([formFactor isEqualToString:@"USB_C_NANO"]) return @"YubiKey 5C Nano";
   if ([formFactor isEqualToString:@"USB_C_LIGHTNING"]) return @"YubiKey 5Ci";
   if ([formFactor isEqualToString:@"USB_A_BIO"]) return @"YubiKey Bio";

@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { Button, Card, ListGroup } from 'heroui-native';
-import { Support, type YubiKeyDevice } from 'react-native-yubikit';
+import {
+  Support,
+  type DeviceInfo,
+  type YubiKeyDevice,
+} from 'react-native-yubikit';
 
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { DeviceBanner } from '@/components/DeviceBanner';
@@ -11,11 +15,13 @@ import { MasterLayout } from '@/components/layouts/MasterLayout';
 export default function SupportScreen() {
   const { devices, log, withBusy, isBusy } = useYubiKey();
   const [name, setName] = useState<string | null>(null);
+  const [info, setInfo] = useState<DeviceInfo | null>(null);
 
   const identifyDevice = async (device: YubiKeyDevice) => {
     await withBusy(async () => {
-      const info = await Support.readInfo(device.handle);
-      const deviceName = Support.getName(info);
+      const deviceInfo = await Support.readInfo(device.handle);
+      const deviceName = Support.getName(deviceInfo);
+      setInfo(deviceInfo);
       setName(deviceName);
       log(`Identified as ${deviceName}`);
     });
@@ -39,11 +45,27 @@ export default function SupportScreen() {
           </Card.Description>
         </Card.Header>
         <Card.Body>
-          {name ? (
+          {name && info ? (
             <ListGroup variant="transparent">
               <ListGroup.Item>
                 <ListGroup.ItemContent>
                   <ListGroup.ItemTitle>{name}</ListGroup.ItemTitle>
+                </ListGroup.ItemContent>
+              </ListGroup.Item>
+              <ListGroup.Item>
+                <ListGroup.ItemContent>
+                  <ListGroup.ItemTitle>Firmware</ListGroup.ItemTitle>
+                  <ListGroup.ItemDescription>
+                    {info.versionName}
+                  </ListGroup.ItemDescription>
+                </ListGroup.ItemContent>
+              </ListGroup.Item>
+              <ListGroup.Item>
+                <ListGroup.ItemContent>
+                  <ListGroup.ItemTitle>Serial number</ListGroup.ItemTitle>
+                  <ListGroup.ItemDescription>
+                    {info.serialNumber ?? 'unavailable'}
+                  </ListGroup.ItemDescription>
                 </ListGroup.ItemContent>
               </ListGroup.Item>
             </ListGroup>
