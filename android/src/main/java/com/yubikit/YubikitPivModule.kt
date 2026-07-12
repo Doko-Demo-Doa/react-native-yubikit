@@ -3,7 +3,6 @@ package com.yubikit
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactMethod
 import com.yubico.yubikit.piv.PivSession
 import com.yubikit.utils.YubikitUtils.base64Decode
 import com.yubikit.utils.YubikitUtils.base64Encode
@@ -47,24 +46,20 @@ class YubikitPivModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun reset(deviceHandle: String, promise: Promise) {
     withPivSession(deviceHandle, promise) { it.reset() }
   }
 
-  @ReactMethod
   override fun getSerialNumber(deviceHandle: String, promise: Promise) {
     withPivSession(deviceHandle, promise) { it.serialNumber }
   }
 
-  @ReactMethod
   override fun authenticate(deviceHandle: String, managementKey: String, promise: Promise) {
     withPivSession(deviceHandle, promise) {
       it.authenticate(base64Decode(managementKey) ?: byteArrayOf())
     }
   }
 
-  @ReactMethod
   override fun setManagementKey(
     deviceHandle: String,
     keyType: String,
@@ -81,17 +76,14 @@ class YubikitPivModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun verifyPin(deviceHandle: String, pin: String, promise: Promise) {
     withPivSession(deviceHandle, promise) { it.verifyPin(pin.toCharArray()) }
   }
 
-  @ReactMethod
   override fun getPinAttempts(deviceHandle: String, promise: Promise) {
     withPivSession(deviceHandle, promise) { it.pinAttempts }
   }
 
-  @ReactMethod
   override fun changePin(
     deviceHandle: String,
     oldPin: String,
@@ -103,7 +95,6 @@ class YubikitPivModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun changePuk(
     deviceHandle: String,
     oldPuk: String,
@@ -115,7 +106,6 @@ class YubikitPivModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun unblockPin(
     deviceHandle: String,
     puk: String,
@@ -127,7 +117,6 @@ class YubikitPivModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun setPinAttempts(
     deviceHandle: String,
     pinAttempts: Double,
@@ -139,7 +128,6 @@ class YubikitPivModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun getPinMetadata(deviceHandle: String, promise: Promise) {
     moduleScope.launch {
       try {
@@ -157,7 +145,6 @@ class YubikitPivModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun getPukMetadata(deviceHandle: String, promise: Promise) {
     moduleScope.launch {
       try {
@@ -175,7 +162,6 @@ class YubikitPivModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun getManagementKeyMetadata(deviceHandle: String, promise: Promise) {
     moduleScope.launch {
       try {
@@ -195,7 +181,6 @@ class YubikitPivModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun getSlotMetadata(deviceHandle: String, slot: String, promise: Promise) {
     moduleScope.launch {
       try {
@@ -217,14 +202,12 @@ class YubikitPivModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun getCertificate(deviceHandle: String, slot: String, promise: Promise) {
     withPivSession(deviceHandle, promise) {
       base64Encode(it.getCertificate(slotFromString(slot)).encoded)
     }
   }
 
-  @ReactMethod
   override fun putCertificate(
     deviceHandle: String,
     slot: String,
@@ -245,19 +228,16 @@ class YubikitPivModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun deleteCertificate(deviceHandle: String, slot: String, promise: Promise) {
     withPivSession(deviceHandle, promise) { it.deleteCertificate(slotFromString(slot)) }
   }
 
-  @ReactMethod
   override fun attestKey(deviceHandle: String, slot: String, promise: Promise) {
     withPivSession(deviceHandle, promise) {
       base64Encode(it.attestKey(slotFromString(slot)).encoded)
     }
   }
 
-  @ReactMethod
   override fun generateKey(
     deviceHandle: String,
     slot: String,
@@ -277,12 +257,10 @@ class YubikitPivModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun deleteKey(deviceHandle: String, slot: String, promise: Promise) {
     withPivSession(deviceHandle, promise) { it.deleteKey(slotFromString(slot)) }
   }
 
-  @ReactMethod
   override fun rawSignOrDecrypt(
     deviceHandle: String,
     slot: String,
@@ -301,7 +279,6 @@ class YubikitPivModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun getBioMetadata(deviceHandle: String, promise: Promise) {
     moduleScope.launch {
       try {

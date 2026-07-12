@@ -2,7 +2,6 @@ package com.yubikit
 
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactMethod
 import com.yubico.yubikit.core.YubiKeyType
 import com.yubico.yubikit.support.DeviceUtil
 import com.yubikit.utils.YubikitUtils.deviceInfoToMap
@@ -20,7 +19,6 @@ class YubikitSupportModule(reactContext: ReactApplicationContext) :
 
   override fun getName(): String = NAME
 
-  @ReactMethod
   override fun readInfo(deviceHandle: String, pid: Double?, promise: Promise) {
     moduleScope.launch {
       try {
@@ -36,7 +34,6 @@ class YubikitSupportModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun getName(info: com.facebook.react.bridge.ReadableMap, keyType: String?): String {
     val deviceInfo = parseDeviceInfo(info)
     val ykType = keyType?.let { YubiKeyType.valueOf(it) }

@@ -3,7 +3,6 @@ package com.yubikit
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.yubico.yubikit.openpgp.KeyRef
 import com.yubico.yubikit.openpgp.OpenPgpSession
@@ -64,12 +63,10 @@ class YubikitOpenPgpModule(reactContext: ReactApplicationContext) :
     return PinPolicy.valueOf(value)
   }
 
-  @ReactMethod
   override fun getVersion(deviceHandle: String, promise: Promise) {
     withOpenPgpSession(deviceHandle, promise) { versionToMap(it.version) }
   }
 
-  @ReactMethod
   override fun getApplicationRelatedData(deviceHandle: String, promise: Promise) {
     moduleScope.launch {
       try {
@@ -88,7 +85,6 @@ class YubikitOpenPgpModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun verifyUserPin(
     deviceHandle: String,
     pin: String,
@@ -100,39 +96,32 @@ class YubikitOpenPgpModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun verifyAdminPin(deviceHandle: String, pin: String, promise: Promise) {
     withOpenPgpSession(deviceHandle, promise) { it.verifyAdminPin(pin.toCharArray()) }
   }
 
-  @ReactMethod
   override fun unverifyUserPin(deviceHandle: String, promise: Promise) {
     withOpenPgpSession(deviceHandle, promise) { it.unverifyUserPin() }
   }
 
-  @ReactMethod
   override fun unverifyAdminPin(deviceHandle: String, promise: Promise) {
     withOpenPgpSession(deviceHandle, promise) { it.unverifyAdminPin() }
   }
 
-  @ReactMethod
   override fun getSignatureCounter(deviceHandle: String, promise: Promise) {
     withOpenPgpSession(deviceHandle, promise) { it.signatureCounter }
   }
 
-  @ReactMethod
   override fun getChallenge(deviceHandle: String, length: Double, promise: Promise) {
     withOpenPgpSession(deviceHandle, promise) {
       base64Encode(it.getChallenge(length.toInt()))
     }
   }
 
-  @ReactMethod
   override fun reset(deviceHandle: String, promise: Promise) {
     withOpenPgpSession(deviceHandle, promise) { it.reset() }
   }
 
-  @ReactMethod
   override fun setPinAttempts(
     deviceHandle: String,
     userAttempts: Double,
@@ -145,7 +134,6 @@ class YubikitOpenPgpModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun changeUserPin(
     deviceHandle: String,
     pin: String,
@@ -157,7 +145,6 @@ class YubikitOpenPgpModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun changeAdminPin(
     deviceHandle: String,
     pin: String,
@@ -169,7 +156,6 @@ class YubikitOpenPgpModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun setSignaturePinPolicy(
     deviceHandle: String,
     policy: String,
@@ -180,14 +166,12 @@ class YubikitOpenPgpModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun getUif(deviceHandle: String, keyRef: String, promise: Promise) {
     withOpenPgpSession(deviceHandle, promise) {
       it.getUif(keyRefFromString(keyRef)).name
     }
   }
 
-  @ReactMethod
   override fun setUif(
     deviceHandle: String,
     keyRef: String,
@@ -199,7 +183,6 @@ class YubikitOpenPgpModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun getAlgorithmInformation(deviceHandle: String, promise: Promise) {
     moduleScope.launch {
       try {
@@ -229,7 +212,6 @@ class YubikitOpenPgpModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun setAlgorithmAttributes(
     deviceHandle: String,
     keyRef: String,
@@ -242,14 +224,12 @@ class YubikitOpenPgpModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun getCertificate(deviceHandle: String, keyRef: String, promise: Promise) {
     withOpenPgpSession(deviceHandle, promise) {
       base64Encode(it.getCertificate(keyRefFromString(keyRef))?.encoded)
     }
   }
 
-  @ReactMethod
   override fun putCertificate(
     deviceHandle: String,
     keyRef: String,
@@ -265,14 +245,12 @@ class YubikitOpenPgpModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun deleteCertificate(deviceHandle: String, keyRef: String, promise: Promise) {
     withOpenPgpSession(deviceHandle, promise) {
       it.deleteCertificate(keyRefFromString(keyRef))
     }
   }
 
-  @ReactMethod
   override fun generateRsaKey(
     deviceHandle: String,
     keyRef: String,
@@ -284,7 +262,6 @@ class YubikitOpenPgpModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun generateEcKey(
     deviceHandle: String,
     keyRef: String,
@@ -298,42 +275,36 @@ class YubikitOpenPgpModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun getPublicKey(deviceHandle: String, keyRef: String, promise: Promise) {
     withOpenPgpSession(deviceHandle, promise) {
       base64Encode(it.getPublicKey(keyRefFromString(keyRef)).encoded)
     }
   }
 
-  @ReactMethod
   override fun deleteKey(deviceHandle: String, keyRef: String, promise: Promise) {
     withOpenPgpSession(deviceHandle, promise) {
       it.deleteKey(keyRefFromString(keyRef))
     }
   }
 
-  @ReactMethod
   override fun sign(deviceHandle: String, payload: String, promise: Promise) {
     withOpenPgpSession(deviceHandle, promise) {
       base64Encode(it.sign(base64Decode(payload) ?: byteArrayOf()))
     }
   }
 
-  @ReactMethod
   override fun decrypt(deviceHandle: String, payload: String, promise: Promise) {
     withOpenPgpSession(deviceHandle, promise) {
       base64Encode(it.decrypt(base64Decode(payload) ?: byteArrayOf()))
     }
   }
 
-  @ReactMethod
   override fun authenticate(deviceHandle: String, payload: String, promise: Promise) {
     withOpenPgpSession(deviceHandle, promise) {
       base64Encode(it.authenticate(base64Decode(payload) ?: byteArrayOf()))
     }
   }
 
-  @ReactMethod
   override fun attestKey(deviceHandle: String, keyRef: String, promise: Promise) {
     withOpenPgpSession(deviceHandle, promise) {
       base64Encode(it.attestKey(keyRefFromString(keyRef)).encoded)

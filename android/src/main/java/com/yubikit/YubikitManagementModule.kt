@@ -2,7 +2,6 @@ package com.yubikit
 
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.yubico.yubikit.management.ManagementSession
 import com.yubico.yubikit.core.UsbInterface
@@ -22,7 +21,6 @@ class YubikitManagementModule(reactContext: ReactApplicationContext) :
 
   override fun getName(): String = NAME
 
-  @ReactMethod
   override fun getDeviceInfo(deviceHandle: String, promise: Promise) {
     moduleScope.launch {
       try {
@@ -38,7 +36,6 @@ class YubikitManagementModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun updateDeviceConfig(
     deviceHandle: String,
     config: ReadableMap,
@@ -67,7 +64,6 @@ class YubikitManagementModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun setMode(
     deviceHandle: String,
     mode: String,
@@ -93,7 +89,6 @@ class YubikitManagementModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun deviceReset(deviceHandle: String, promise: Promise) {
     moduleScope.launch {
       try {

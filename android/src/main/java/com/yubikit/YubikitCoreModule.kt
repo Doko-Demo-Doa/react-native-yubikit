@@ -3,7 +3,6 @@ package com.yubikit
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableArray
 import com.yubico.yubikit.android.transport.nfc.NfcConfiguration
@@ -34,7 +33,6 @@ class YubikitCoreModule(reactContext: ReactApplicationContext) :
 
   override fun getName(): String = NAME
 
-  @ReactMethod
   override fun startUsbDiscovery(config: ReadableMap?) {
     YubiKitManagerHolder.initialize(reactApplicationContext)
     val usbConfig = UsbConfiguration()
@@ -47,12 +45,10 @@ class YubikitCoreModule(reactContext: ReactApplicationContext) :
     YubiKitManagerHolder.startUsbDiscovery()
   }
 
-  @ReactMethod
   override fun stopUsbDiscovery() {
     YubiKitManagerHolder.stopUsbDiscovery()
   }
 
-  @ReactMethod
   override fun startNfcDiscovery(config: ReadableMap?) {
     YubiKitManagerHolder.initialize(reactApplicationContext)
     val nfcConfig = NfcConfiguration()
@@ -76,14 +72,12 @@ class YubikitCoreModule(reactContext: ReactApplicationContext) :
     YubiKitManagerHolder.startNfcDiscovery(activity)
   }
 
-  @ReactMethod
   override fun stopNfcDiscovery() {
     val activity = reactApplicationContext.currentActivity
       ?: throw IllegalStateException("No current Activity for NFC discovery")
     YubiKitManagerHolder.stopNfcDiscovery(activity)
   }
 
-  @ReactMethod
   override fun requestConnection(deviceHandle: String, connectionType: String, promise: Promise) {
     moduleScope.launch {
       try {
@@ -114,7 +108,6 @@ class YubikitCoreModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun sendApdu(connectionHandle: String, apdu: String, promise: Promise) {
     moduleScope.launch {
       try {
@@ -131,12 +124,10 @@ class YubikitCoreModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun closeConnection(connectionHandle: String) {
     YubiKitManagerHolder.removeConnection(connectionHandle)
   }
 
-  @ReactMethod
   override fun getDiscoveredDevices(): WritableArray {
     val array = Arguments.createArray()
     YubiKitManagerHolder.listDevices().forEach { (handle, device) ->

@@ -3,7 +3,6 @@ package com.yubikit
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.yubico.yubikit.yubiotp.ConfigurationState
 import com.yubico.yubikit.yubiotp.HmacSha1SlotConfiguration
@@ -147,7 +146,6 @@ class YubikitYubiOtpModule(reactContext: ReactApplicationContext) :
     return cfg
   }
 
-  @ReactMethod
   override fun getConfigurationState(deviceHandle: String, promise: Promise) {
     moduleScope.launch {
       try {
@@ -161,22 +159,18 @@ class YubikitYubiOtpModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun getVersion(deviceHandle: String, promise: Promise) {
     withYubiOtpSession(deviceHandle, promise) { versionToMap(it.version) }
   }
 
-  @ReactMethod
   override fun getSerialNumber(deviceHandle: String, promise: Promise) {
     withYubiOtpSession(deviceHandle, promise) { it.serialNumber }
   }
 
-  @ReactMethod
   override fun swapConfigurations(deviceHandle: String, promise: Promise) {
     withYubiOtpSession(deviceHandle, promise) { it.swapConfigurations() }
   }
 
-  @ReactMethod
   override fun deleteConfiguration(
     deviceHandle: String,
     slot: String,
@@ -188,7 +182,6 @@ class YubikitYubiOtpModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun putConfiguration(
     deviceHandle: String,
     slot: String,
@@ -207,7 +200,6 @@ class YubikitYubiOtpModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun updateConfiguration(
     deviceHandle: String,
     slot: String,
@@ -226,7 +218,6 @@ class YubikitYubiOtpModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun setNdefConfiguration(
     deviceHandle: String,
     slot: String,
@@ -243,7 +234,6 @@ class YubikitYubiOtpModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun calculateHmacSha1(
     deviceHandle: String,
     slot: String,

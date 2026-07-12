@@ -3,7 +3,6 @@ package com.yubikit
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactMethod
 import com.yubico.yubikit.oath.OathSession
 import com.yubikit.utils.YubikitUtils.base64Decode
 import com.yubikit.utils.YubikitUtils.base64Encode
@@ -45,32 +44,26 @@ class YubikitOathModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun getDeviceId(deviceHandle: String, promise: Promise) {
     withOathSession(deviceHandle, promise) { it.deviceId }
   }
 
-  @ReactMethod
   override fun reset(deviceHandle: String, promise: Promise) {
     withOathSession(deviceHandle, promise) { it.reset() }
   }
 
-  @ReactMethod
   override fun isAccessKeySet(deviceHandle: String, promise: Promise) {
     withOathSession(deviceHandle, promise) { it.isAccessKeySet }
   }
 
-  @ReactMethod
   override fun isLocked(deviceHandle: String, promise: Promise) {
     withOathSession(deviceHandle, promise) { it.isLocked }
   }
 
-  @ReactMethod
   override fun unlockWithPassword(deviceHandle: String, password: String, promise: Promise) {
     withOathSession(deviceHandle, promise) { it.unlock(password.toCharArray()) }
   }
 
-  @ReactMethod
   override fun unlockWithAccessKey(deviceHandle: String, accessKey: String, promise: Promise) {
     withOathSession(deviceHandle, promise) {
       val key = com.yubikit.utils.YubikitUtils.accessKeyFromBytes(base64Decode(accessKey))
@@ -79,24 +72,20 @@ class YubikitOathModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun setPassword(deviceHandle: String, password: String, promise: Promise) {
     withOathSession(deviceHandle, promise) { it.setPassword(password.toCharArray()) }
   }
 
-  @ReactMethod
   override fun setAccessKey(deviceHandle: String, accessKey: String, promise: Promise) {
     withOathSession(deviceHandle, promise) {
       it.setAccessKey(base64Decode(accessKey) ?: byteArrayOf())
     }
   }
 
-  @ReactMethod
   override fun deleteAccessKey(deviceHandle: String, promise: Promise) {
     withOathSession(deviceHandle, promise) { it.deleteAccessKey() }
   }
 
-  @ReactMethod
   override fun getCredentials(deviceHandle: String, promise: Promise) {
     moduleScope.launch {
       try {
@@ -114,7 +103,6 @@ class YubikitOathModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun calculateCodes(deviceHandle: String, timestamp: Double?, promise: Promise) {
     moduleScope.launch {
       try {
@@ -138,7 +126,6 @@ class YubikitOathModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun calculateResponse(
     deviceHandle: String,
     credentialId: String,
@@ -155,7 +142,6 @@ class YubikitOathModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun calculateCode(
     deviceHandle: String,
     credentialId: String,
@@ -183,7 +169,6 @@ class YubikitOathModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun putCredential(
     deviceHandle: String,
     credentialData: com.facebook.react.bridge.ReadableMap,
@@ -204,14 +189,12 @@ class YubikitOathModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun deleteCredential(deviceHandle: String, credentialId: String, promise: Promise) {
     withOathSession(deviceHandle, promise) {
       it.deleteCredential(base64Decode(credentialId) ?: byteArrayOf())
     }
   }
 
-  @ReactMethod
   override fun renameCredential(
     deviceHandle: String,
     credentialId: String,

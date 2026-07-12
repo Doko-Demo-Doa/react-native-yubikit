@@ -4,7 +4,6 @@ import android.util.Base64
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableMap
 import com.yubico.yubikit.fido.client.Ctap2Client
@@ -142,7 +141,6 @@ class YubikitFidoModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun getInfo(deviceHandle: String, promise: Promise) {
     withFidoConnection(deviceHandle, promise) { connection ->
       Ctap2Session(connection).use { session ->
@@ -151,7 +149,6 @@ class YubikitFidoModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun makeCredential(
     deviceHandle: String,
     options: ReadableMap,
@@ -228,7 +225,6 @@ class YubikitFidoModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun getAssertion(
     deviceHandle: String,
     options: ReadableMap,
@@ -273,7 +269,6 @@ class YubikitFidoModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun reset(deviceHandle: String, promise: Promise) {
     withFidoConnection(deviceHandle, promise) { connection ->
       Ctap2Session(connection).use { it.reset(null) }
@@ -304,12 +299,10 @@ class YubikitFidoModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun getCredentialCount(deviceHandle: String, pin: String, promise: Promise) {
     withCredentialManager(deviceHandle, pin, promise) { it.credentialCount }
   }
 
-  @ReactMethod
   override fun getRpIdList(deviceHandle: String, pin: String, promise: Promise) {
     withCredentialManager(deviceHandle, pin, promise) {
       val list = it.rpIdList
@@ -319,7 +312,6 @@ class YubikitFidoModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun getCredentials(
     deviceHandle: String,
     rpId: String,
@@ -346,7 +338,6 @@ class YubikitFidoModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun deleteCredential(
     deviceHandle: String,
     credential: ReadableMap,
@@ -363,7 +354,6 @@ class YubikitFidoModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  @ReactMethod
   override fun updateUserInformation(
     deviceHandle: String,
     credential: ReadableMap,
