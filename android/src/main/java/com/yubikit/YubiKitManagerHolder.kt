@@ -32,6 +32,7 @@ object YubiKitManagerHolder {
 
     private val devices = ConcurrentHashMap<String, YubiKeyDevice>()
     private val connections = ConcurrentHashMap<String, YubiKeyConnection>()
+    private val connectionReleaseLatches = ConcurrentHashMap<String, CountDownLatch>()
 
     private var usbConfiguration = UsbConfiguration()
     private var nfcConfiguration = NfcConfiguration()
@@ -90,6 +91,9 @@ object YubiKitManagerHolder {
     @JvmStatic
     fun removeConnection(handle: String) {
         connections.remove(handle)?.close()
+        // Wakes up the requestConnection() call still blocked on this handle's
+        // latch below, letting its try-with-resources finally close.
+        connectionReleaseLatches.remove(handle)?.countDown()
     }
 
     @JvmStatic
@@ -214,6 +218,14 @@ object YubiKitManagerHolder {
         return handle to connection
     }
 
+    // Non-OTP connections are opened by the SDK inside a try-with-resources block that
+    // closes the connection the instant device.requestConnection()'s callback returns
+    // (see UsbYubiKeyDevice.requestConnection). Since this module's requestConnection/
+    // sendApdu/closeConnection are exposed as three separate, independently-timed JS
+    // calls, the callback below is kept alive on a latch until closeConnection() (or
+    // this timeout) releases it, so the connection stays open across those calls.
+    private const val CONNECTION_HOLD_TIMEOUT_MS = 120_000L
+
     /**
      * Open a connection asynchronously and return the handle.
      */
@@ -225,12 +237,20 @@ object YubiKitManagerHolder {
     ) {
         val device = getDevice(deviceHandle)
         device.requestConnection(connectionType) { result ->
+            var handle: String? = null
             try {
                 val connection = result.value
-                val handle = putConnection(connection)
+                handle = putConnection(connection)
+                val releaseLatch = CountDownLatch(1)
+                connectionReleaseLatches[handle] = releaseLatch
                 callback(Result.success(handle to connection))
+                releaseLatch.await(CONNECTION_HOLD_TIMEOUT_MS, TimeUnit.MILLISECONDS)
             } catch (e: Exception) {
                 callback(Result.failure(e))
+            } finally {
+                // No-op if closeConnection() already removed it; guards against the
+                // timeout case where the JS side never explicitly released it.
+                handle?.let { connections.remove(it)?.close(); connectionReleaseLatches.remove(it) }
             }
         }
     }
@@ -283,5 +303,28 @@ object YubiKitManagerHolder {
     @JvmStatic
     fun <R> withFido(deviceHandle: String, block: (FidoConnection) -> R): R {
         return withConnection(deviceHandle, FidoConnection::class.java, block = block)
+    }
+
+    /**
+     * Opens whichever of SmartCard/Otp/Fido the device actually supports, in that
+     * preference order. Several sessions (ManagementSession, Ctap2Session) accept more
+     * than one connection type, and hardcoding a single type breaks devices/transports
+     * that don't support it (e.g. NFC devices only ever support SmartCardConnection).
+     */
+    @JvmStatic
+    fun <R> withAnyConnection(
+        deviceHandle: String,
+        preferredOrder: List<Class<out YubiKeyConnection>>,
+        block: (YubiKeyConnection) -> R
+    ): R {
+        val device = getDevice(deviceHandle)
+        val connectionType = preferredOrder.firstOrNull { device.supportsConnection(it) }
+            ?: throw IllegalArgumentException("Device does not support any of: ${preferredOrder.map { it.simpleName }}")
+        return when (connectionType) {
+            SmartCardConnection::class.java -> withConnection(deviceHandle, SmartCardConnection::class.java) { block(it) }
+            OtpConnection::class.java -> withConnection(deviceHandle, OtpConnection::class.java) { block(it) }
+            FidoConnection::class.java -> withConnection(deviceHandle, FidoConnection::class.java) { block(it) }
+            else -> throw IllegalArgumentException("Unsupported connection type: $connectionType")
+        }
     }
 }

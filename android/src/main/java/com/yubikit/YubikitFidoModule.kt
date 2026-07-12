@@ -6,6 +6,9 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableMap
+import com.yubico.yubikit.core.YubiKeyConnection
+import com.yubico.yubikit.core.fido.FidoConnection
+import com.yubico.yubikit.core.smartcard.SmartCardConnection
 import com.yubico.yubikit.fido.client.Ctap2Client
 import com.yubico.yubikit.fido.client.CredentialManager
 import com.yubico.yubikit.fido.client.WebAuthnClient
@@ -13,6 +16,8 @@ import com.yubico.yubikit.fido.client.clientdata.ClientDataProvider
 import com.yubico.yubikit.fido.ctap.Ctap2Session
 import com.yubico.yubikit.fido.webauthn.AuthenticatorAssertionResponse
 import com.yubico.yubikit.fido.webauthn.AuthenticatorAttestationResponse
+import com.yubico.yubikit.fido.webauthn.AuthenticatorSelectionCriteria
+import com.yubico.yubikit.fido.webauthn.Extensions
 import com.yubico.yubikit.fido.webauthn.PublicKeyCredential
 import com.yubico.yubikit.fido.webauthn.PublicKeyCredentialCreationOptions
 import com.yubico.yubikit.fido.webauthn.PublicKeyCredentialDescriptor
@@ -35,14 +40,31 @@ class YubikitFidoModule(reactContext: ReactApplicationContext) :
 
   override fun getName(): String = NAME
 
+  // NfcYubiKeyDevice only ever supports SmartCardConnection, so hardcoding
+  // FidoConnection here would break every CTAP2/FIDO2 operation over NFC.
+  // Ctap2Session accepts either connection type, so prefer FidoConnection (USB)
+  // and fall back to SmartCardConnection (NFC and USB devices without CCID).
+  private val ctap2ConnectionOrder = listOf(
+    FidoConnection::class.java as Class<out YubiKeyConnection>,
+    SmartCardConnection::class.java
+  )
+
+  private fun openCtap2Session(connection: YubiKeyConnection): Ctap2Session {
+    return when (connection) {
+      is FidoConnection -> Ctap2Session(connection)
+      is SmartCardConnection -> Ctap2Session(connection)
+      else -> throw IllegalArgumentException("Unsupported connection type for CTAP2: $connection")
+    }
+  }
+
   private inline fun <R> withFidoConnection(
     deviceHandle: String,
     promise: Promise,
-    crossinline block: (com.yubico.yubikit.core.fido.FidoConnection) -> R
+    crossinline block: (YubiKeyConnection) -> R
   ) {
     moduleScope.launch {
       try {
-        val result = YubiKitManagerHolder.withFido(deviceHandle) { connection -> block(connection) }
+        val result = YubiKitManagerHolder.withAnyConnection(deviceHandle, ctap2ConnectionOrder) { connection -> block(connection) }
         when (result) {
           is Unit -> promise.resolve(null)
           else -> promise.resolve(result)
@@ -143,7 +165,7 @@ class YubikitFidoModule(reactContext: ReactApplicationContext) :
 
   override fun getInfo(deviceHandle: String, promise: Promise) {
     withFidoConnection(deviceHandle, promise) { connection ->
-      Ctap2Session(connection).use { session ->
+      openCtap2Session(connection).use { session ->
         mapCtap2Info(session.info)
       }
     }
@@ -159,7 +181,7 @@ class YubikitFidoModule(reactContext: ReactApplicationContext) :
   ) {
     moduleScope.launch {
       try {
-        val credential = YubiKitManagerHolder.withFido(deviceHandle) { connection ->
+        val credential = YubiKitManagerHolder.withAnyConnection(deviceHandle, ctap2ConnectionOrder) { connection ->
           WebAuthnClient.create(connection, null, null).use { client ->
             val rpMap = options.getMap("rp")!!
             val userMap = options.getMap("user")!!
@@ -191,21 +213,32 @@ class YubikitFidoModule(reactContext: ReactApplicationContext) :
                 val m = arr.getMap(i)!!
                 PublicKeyCredentialDescriptor(
                   m.getString("type") ?: "public-key",
-                  base64Decode(m.getString("id")) ?: byteArrayOf()
+                  base64Decode(m.getString("id")) ?: byteArrayOf(),
+                  m.getArray("transports")?.toArrayList()?.map { it.toString() }
                 )
               }
             }
+
+            val authenticatorSelection = options.getMap("authenticatorSelection")?.let { sel ->
+              AuthenticatorSelectionCriteria(
+                sel.getString("authenticatorAttachment"),
+                sel.getString("residentKey"),
+                sel.getString("userVerification")
+              )
+            }
+
+            val extensions = options.getMap("extensions")?.toHashMap()?.let { Extensions.fromMap(it) }
 
             val creationOptions = PublicKeyCredentialCreationOptions(
               rp,
               user,
               challenge,
               pubKeyCredParams,
-              null,
+              if (options.hasKey("timeout") && !options.isNull("timeout")) options.getDouble("timeout").toLong() else null,
               excludeCredentials,
-              null,
-              null,
-              null
+              authenticatorSelection,
+              options.getString("attestation"),
+              extensions
             )
 
             client.makeCredential(
@@ -234,7 +267,7 @@ class YubikitFidoModule(reactContext: ReactApplicationContext) :
   ) {
     moduleScope.launch {
       try {
-        val credential = YubiKitManagerHolder.withFido(deviceHandle) { connection ->
+        val credential = YubiKitManagerHolder.withAnyConnection(deviceHandle, ctap2ConnectionOrder) { connection ->
           WebAuthnClient.create(connection, null, null).use { client ->
             val challenge = base64Decode(options.getString("challenge")) ?: byteArrayOf()
             val clientData = buildClientData("webauthn.get", challenge, effectiveDomain)
@@ -245,18 +278,21 @@ class YubikitFidoModule(reactContext: ReactApplicationContext) :
                 val m = arr.getMap(i)!!
                 PublicKeyCredentialDescriptor(
                   m.getString("type") ?: "public-key",
-                  base64Decode(m.getString("id")) ?: byteArrayOf()
+                  base64Decode(m.getString("id")) ?: byteArrayOf(),
+                  m.getArray("transports")?.toArrayList()?.map { it.toString() }
                 )
               }
             }
 
+            val extensions = options.getMap("extensions")?.toHashMap()?.let { Extensions.fromMap(it) }
+
             val requestOptions = PublicKeyCredentialRequestOptions(
               challenge,
-              null,
+              if (options.hasKey("timeout") && !options.isNull("timeout")) options.getDouble("timeout").toLong() else null,
               rpId,
               allowCredentials,
-              null,
-              null
+              options.getString("userVerification"),
+              extensions
             )
 
             client.getAssertion(clientData, requestOptions, effectiveDomain, pin?.toCharArray(), null)
@@ -271,7 +307,7 @@ class YubikitFidoModule(reactContext: ReactApplicationContext) :
 
   override fun reset(deviceHandle: String, promise: Promise) {
     withFidoConnection(deviceHandle, promise) { connection ->
-      Ctap2Session(connection).use { it.reset(null) }
+      openCtap2Session(connection).use { it.reset(null) }
     }
   }
 
@@ -283,8 +319,8 @@ class YubikitFidoModule(reactContext: ReactApplicationContext) :
   ) {
     moduleScope.launch {
       try {
-        val result = YubiKitManagerHolder.withFido(deviceHandle) { connection ->
-          Ctap2Client(Ctap2Session(connection)).use { client ->
+        val result = YubiKitManagerHolder.withAnyConnection(deviceHandle, ctap2ConnectionOrder) { connection ->
+          Ctap2Client(openCtap2Session(connection)).use { client ->
             val manager = client.getCredentialManager(pin.toCharArray())
             block(manager)
           }

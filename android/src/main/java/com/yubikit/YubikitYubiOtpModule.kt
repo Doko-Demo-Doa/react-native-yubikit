@@ -147,16 +147,7 @@ class YubikitYubiOtpModule(reactContext: ReactApplicationContext) :
   }
 
   override fun getConfigurationState(deviceHandle: String, promise: Promise) {
-    moduleScope.launch {
-      try {
-        val state = YubiKitManagerHolder.withSmartCard(deviceHandle) { connection ->
-          YubiOtpSession(connection).use { it.configurationState }
-        }
-        promise.resolve(configurationStateToMap(state))
-      } catch (e: Exception) {
-        promise.reject("YUBIOTP_ERROR", e.message, e)
-      }
-    }
+    withYubiOtpSession(deviceHandle, promise) { configurationStateToMap(it.configurationState) }
   }
 
   override fun getVersion(deviceHandle: String, promise: Promise) {

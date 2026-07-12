@@ -78,6 +78,12 @@ class YubikitSupportModule(reactContext: ReactApplicationContext) :
     }
     builder.isLocked(map.getBoolean("isLocked"))
     builder.isFips(map.getBoolean("isFips"))
+    if (map.hasKey("isSky") && !map.isNull("isSky")) {
+      builder.isSky(map.getBoolean("isSky"))
+    }
+    if (map.hasKey("pinComplexity") && !map.isNull("pinComplexity")) {
+      builder.pinComplexity(map.getBoolean("pinComplexity"))
+    }
     // getName() relies on hasTransport(Transport.NFC)/(USB), which in turn is just
     // "does the map below contain this key" - if this isn't reconstructed here,
     // hasTransport() is always false for every transport and getName() can never

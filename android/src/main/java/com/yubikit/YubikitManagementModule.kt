@@ -3,6 +3,10 @@ package com.yubikit
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
+import com.yubico.yubikit.core.YubiKeyConnection
+import com.yubico.yubikit.core.fido.FidoConnection
+import com.yubico.yubikit.core.otp.OtpConnection
+import com.yubico.yubikit.core.smartcard.SmartCardConnection
 import com.yubico.yubikit.management.ManagementSession
 import com.yubico.yubikit.core.UsbInterface
 import com.yubikit.utils.YubikitUtils.base64Decode
@@ -19,13 +23,31 @@ class YubikitManagementModule(reactContext: ReactApplicationContext) :
 
   private val moduleScope = CoroutineScope(Dispatchers.IO)
 
+  // ManagementSession supports SmartCard, Otp and Fido connections; hardcoding
+  // SmartCardConnection breaks OTP-only and FIDO-only-mode devices (e.g. a YubiKey
+  // with CCID disabled via USB mode config).
+  private val managementConnectionOrder = listOf(
+    SmartCardConnection::class.java as Class<out YubiKeyConnection>,
+    OtpConnection::class.java,
+    FidoConnection::class.java
+  )
+
+  private fun openManagementSession(connection: YubiKeyConnection): ManagementSession {
+    return when (connection) {
+      is SmartCardConnection -> ManagementSession(connection)
+      is OtpConnection -> ManagementSession(connection)
+      is FidoConnection -> ManagementSession(connection)
+      else -> throw IllegalArgumentException("Unsupported connection type for Management: $connection")
+    }
+  }
+
   override fun getName(): String = NAME
 
   override fun getDeviceInfo(deviceHandle: String, promise: Promise) {
     moduleScope.launch {
       try {
-        val info = YubiKitManagerHolder.withSmartCard(deviceHandle) { connection ->
-          ManagementSession(connection).use { session ->
+        val info = YubiKitManagerHolder.withAnyConnection(deviceHandle, managementConnectionOrder) { connection ->
+          openManagementSession(connection).use { session ->
             session.deviceInfo
           }
         }
@@ -47,8 +69,8 @@ class YubikitManagementModule(reactContext: ReactApplicationContext) :
     moduleScope.launch {
       try {
         val deviceConfig = parseDeviceConfig(config)
-        YubiKitManagerHolder.withSmartCard(deviceHandle) { connection ->
-          ManagementSession(connection).use { session ->
+        YubiKitManagerHolder.withAnyConnection(deviceHandle, managementConnectionOrder) { connection ->
+          openManagementSession(connection).use { session ->
             session.updateDeviceConfig(
               deviceConfig,
               reboot,
@@ -73,8 +95,8 @@ class YubikitManagementModule(reactContext: ReactApplicationContext) :
   ) {
     moduleScope.launch {
       try {
-        YubiKitManagerHolder.withSmartCard(deviceHandle) { connection ->
-          ManagementSession(connection).use { session ->
+        YubiKitManagerHolder.withAnyConnection(deviceHandle, managementConnectionOrder) { connection ->
+          openManagementSession(connection).use { session ->
             session.setMode(
               parseUsbMode(mode),
               chalrespTimeout.toInt().toByte(),
@@ -92,8 +114,8 @@ class YubikitManagementModule(reactContext: ReactApplicationContext) :
   override fun deviceReset(deviceHandle: String, promise: Promise) {
     moduleScope.launch {
       try {
-        YubiKitManagerHolder.withSmartCard(deviceHandle) { connection ->
-          ManagementSession(connection).use { session ->
+        YubiKitManagerHolder.withAnyConnection(deviceHandle, managementConnectionOrder) { connection ->
+          openManagementSession(connection).use { session ->
             session.deviceReset()
           }
         }

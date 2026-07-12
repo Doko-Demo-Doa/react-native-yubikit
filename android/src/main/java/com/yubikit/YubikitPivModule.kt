@@ -173,7 +173,13 @@ class YubikitPivModule(reactContext: ReactApplicationContext) :
         promise.resolve(Arguments.createMap().apply {
           putString("keyType", com.yubikit.utils.YubikitUtils.managementKeyTypeToString(meta.keyType))
           putBoolean("defaultValue", meta.isDefaultValue)
-          putString("touchPolicy", com.yubikit.utils.YubikitUtils.touchPolicyToString(meta.touchPolicy))
+          // The JS-facing type is `touchRequired: boolean`, not the raw TouchPolicy
+          // string used by getSlotMetadata - DEFAULT/NEVER both mean "not required".
+          putBoolean(
+            "touchRequired",
+            meta.touchPolicy != com.yubico.yubikit.piv.TouchPolicy.DEFAULT &&
+              meta.touchPolicy != com.yubico.yubikit.piv.TouchPolicy.NEVER
+          )
         })
       } catch (e: Exception) {
         promise.reject("PIV_ERROR", e.message, e)
