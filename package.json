@@ -47,14 +47,14 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Doko-Demo-Doah/react-native-yubikit.git"
+    "url": "git+https://github.com/Doko-Demo-Doa/react-native-yubikit.git"
   },
   "author": "Quan Pham <doraemonfanclub@gmail.com> (https://github.com/Doko-Demo-Doah)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Doko-Demo-Doah/react-native-yubikit/issues"
+    "url": "https://github.com/Doko-Demo-Doa/react-native-yubikit/issues"
   },
-  "homepage": "https://github.com/Doko-Demo-Doah/react-native-yubikit#readme",
+  "homepage": "https://github.com/Doko-Demo-Doa/react-native-yubikit#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
