@@ -11,6 +11,11 @@ import {
 } from '@/components/heroui';
 import { useYubiKey } from '@/context/YubiKeyContext';
 
+function shortenHandle(handle: string) {
+  if (handle.length <= 8) return handle;
+  return `${handle.slice(0, 4)}...${handle.slice(-4)}`;
+}
+
 export function DeviceBanner() {
   const {
     devices,
@@ -56,7 +61,7 @@ export function DeviceBanner() {
               className="flex-row items-center gap-2"
             >
               <Label>{device.transport.toUpperCase()}</Label>
-              <Description>{device.handle}</Description>
+              <Description>{shortenHandle(device.handle)}</Description>
               <Radio>
                 <Radio.Indicator>
                   <Radio.IndicatorThumb />
