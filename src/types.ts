@@ -22,7 +22,9 @@ export interface YubiKeyDevice {
 }
 
 export type ConnectionType =
-  'SmartCardConnection' | 'OtpConnection' | 'FidoConnection';
+  | 'SmartCardConnection'
+  | 'OtpConnection'
+  | 'FidoConnection';
 
 export interface UsbConfiguration {
   handlePermissions?: boolean;
@@ -72,7 +74,13 @@ export type FormFactor =
   | 'USB_C_BIO';
 
 export type Capability =
-  'OTP' | 'U2F' | 'OPENPGP' | 'PIV' | 'OATH' | 'HSMAUTH' | 'FIDO2';
+  | 'OTP'
+  | 'U2F'
+  | 'OPENPGP'
+  | 'PIV'
+  | 'OATH'
+  | 'HSMAUTH'
+  | 'FIDO2';
 
 export interface DeviceConfig {
   enabledCapabilities?: Partial<Record<Transport, number>>;
@@ -192,7 +200,12 @@ export type PivKeyType =
   | 'X25519';
 
 export type PivPinPolicy =
-  'DEFAULT' | 'NEVER' | 'ONCE' | 'ALWAYS' | 'MATCH_ONCE' | 'MATCH_ALWAYS';
+  | 'DEFAULT'
+  | 'NEVER'
+  | 'ONCE'
+  | 'ALWAYS'
+  | 'MATCH_ONCE'
+  | 'MATCH_ALWAYS';
 
 export type PivTouchPolicy = 'DEFAULT' | 'NEVER' | 'ALWAYS' | 'CACHED';
 

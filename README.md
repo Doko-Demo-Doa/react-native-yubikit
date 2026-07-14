@@ -32,25 +32,25 @@ The docs site covers requirements, installation (including the iOS Podfile overr
 
 Android has full parity across every module. iOS is missing OpenPGP entirely, YubiOTP slot programming, and FIDO2 resident-credential management — these gaps come from the underlying YubiKit iOS SDK itself, not from this wrapper. See the [full platform support table](https://doko.aniviet.com/oss/react-native-yubikey) on the docs site for the exact per-method breakdown.
 
-| Module | Android | iOS |
-|---|---|---|
-| Core / Support | Full | Full |
-| Management | Full | Partial |
-| OATH | Full | Full |
-| PIV | Full | Full (no RSA3072/4096 raw sign/decrypt) |
-| OpenPGP | Full | Not available |
-| YubiOTP | Full | Partial (HMAC-SHA1 only) |
-| FIDO2 | Full | Partial (no credential management) |
+| Module         | Android | iOS                                     |
+| -------------- | ------- | --------------------------------------- |
+| Core / Support | Full    | Full                                    |
+| Management     | Full    | Partial                                 |
+| OATH           | Full    | Full                                    |
+| PIV            | Full    | Full (no RSA3072/4096 raw sign/decrypt) |
+| OpenPGP        | Full    | Not available                           |
+| YubiOTP        | Full    | Partial (HMAC-SHA1 only)                |
+| FIDO2          | Full    | Partial (no credential management)      |
 
 ---
 
 ## Requirements
 
-| | Minimum |
-|---|---|
-| React Native | 0.74+ with the **New Architecture enabled** |
-| iOS | 16.4+ recommended ([Podfile override required](https://doko.aniviet.com/oss/react-native-yubikey/installation) — the CocoaPods-trunk `YubiKit` pod is too old) |
-| Android | `minSdkVersion` 24 |
+|              | Minimum                                                                                                                                                        |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| React Native | 0.74+ with the **New Architecture enabled**                                                                                                                    |
+| iOS          | 16.4+ recommended ([Podfile override required](https://doko.aniviet.com/oss/react-native-yubikey/installation) — the CocoaPods-trunk `YubiKit` pod is too old) |
+| Android      | `minSdkVersion` 24                                                                                                                                             |
 
 ---
 

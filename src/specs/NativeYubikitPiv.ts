@@ -21,7 +21,12 @@ interface PivSlotMetadata {
     | 'ED25519'
     | 'X25519';
   pinPolicy:
-    'DEFAULT' | 'NEVER' | 'ONCE' | 'ALWAYS' | 'MATCH_ONCE' | 'MATCH_ALWAYS';
+    | 'DEFAULT'
+    | 'NEVER'
+    | 'ONCE'
+    | 'ALWAYS'
+    | 'MATCH_ONCE'
+    | 'MATCH_ALWAYS';
   touchPolicy: 'DEFAULT' | 'NEVER' | 'ALWAYS' | 'CACHED';
   generated: boolean;
   publicKey?: string;

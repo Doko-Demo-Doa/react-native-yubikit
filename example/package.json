@@ -1,6 +1,7 @@
 {
   "name": "react-native-yubikit-example",
   "version": "1.0.0",
+  "private": true,
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start --dev-client",
@@ -36,7 +37,6 @@
     "tailwindcss": "^4.3.2",
     "uniwind": "^1.10.0"
   },
-  "private": true,
   "devDependencies": {
     "expo-dev-client": "~57.0.5",
     "react-native-builder-bob": "^0.43.0",
