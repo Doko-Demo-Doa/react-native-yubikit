@@ -1,242 +1,126 @@
 # @doko/react-native-yubikit
 
-A React Native wrapper around the [YubiKit Android SDK v3](https://developers.yubico.com/yubikit-android/) and [YubiKit iOS SDK](https://developers.yubico.com/yubikit-ios/) for interacting with YubiKey devices over USB and NFC.
+A React Native TurboModule wrapper around Yubico's native [YubiKit Android](https://developers.yubico.com/yubikit-android/) and [YubiKit iOS](https://developers.yubico.com/yubikit-ios/) SDKs, for talking to YubiKey hardware over USB and NFC.
+
+[![npm version](https://img.shields.io/npm/v/@doko/react-native-yubikit?style=for-the-badge&color=blue)](https://www.npmjs.com/package/@doko/react-native-yubikit)
+[![Monthly downloads](https://img.shields.io/npm/dm/@doko/react-native-yubikit?style=for-the-badge)](https://www.npmjs.com/package/@doko/react-native-yubikit)
+[![New Architecture](https://img.shields.io/badge/New%20Architecture-Only-5f3dc4?style=for-the-badge)](https://reactnative.dev/docs/the-new-architecture/landing-page)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Supported-3178C6?style=for-the-badge)](https://www.typescriptlang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-2f9e44?style=for-the-badge)](LICENSE)
+[![iOS](https://img.shields.io/badge/iOS-16%2B-000000?style=for-the-badge&logo=apple)](https://developer.apple.com/ios/)
+[![Android](https://img.shields.io/badge/Android-API%2024%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com/)
+
+📖 **Full documentation:** [doko.aniviet.com/oss/react-native-yubikey](https://doko.aniviet.com/oss/react-native-yubikey)
+
+The docs site covers requirements, installation (including the iOS Podfile override you need), usage examples for every module, security notes, advanced patterns, and troubleshooting. This README is deliberately short — start there for anything beyond a quick look.
+
+---
 
 ## Features
 
-- USB and NFC YubiKey discovery
-- Core connection handling and raw APDU transport
-- Management: device info, config, USB mode, factory reset
-- OATH: TOTP/HOTP credentials and code calculation
-- PIV: PIN/PUK, slot metadata, certificates, key generation
-- OpenPGP: PIN verification, signature counter, key management
-- YubiOTP: slot configuration and HMAC-SHA1 challenge-response
-- FIDO2 / WebAuthn: authenticator info, resident credentials
-- Support helpers for device identification
+- 🔌 **USB + NFC discovery** — attach/detach events via a single `YubiKeyEvent` stream
+- 🧩 **8 native modules**, exposed as namespaces: `Core`, `Support`, `Management`, `Oath`, `Piv`, `OpenPgp`, `YubiOtp`, `Fido`
+- 🪝 **`YubiKeyProvider` + `useYubiKey()`** — drop-in device discovery/selection state, no boilerplate required
+- 🔐 **PIV** — PIN/PUK, slot metadata, certificates, key generation, raw sign/decrypt
+- 🔑 **FIDO2/WebAuthn** — authenticator info, registration, authentication
+- ⏱️ **OATH** — TOTP/HOTP credential management and code calculation
+- 🆕 **New Architecture only** — built as Fabric/TurboModules with Codegen, no old-bridge fallback
+
+---
 
 ## Platform support
 
-This library targets both Android and iOS, but feature parity is a work in progress. The table below shows where the two platforms differ today. iOS support is based on [YubiKit iOS 4.7.0](https://github.com/Yubico/yubikit-ios) (plus a handful of unreleased post-4.7.0 commits).
+Android has full parity across every module. iOS is missing OpenPGP entirely, YubiOTP slot programming, and FIDO2 resident-credential management — these gaps come from the underlying YubiKit iOS SDK itself, not from this wrapper. See the [full platform support table](https://doko.aniviet.com/oss/react-native-yubikey) on the docs site for the exact per-method breakdown.
 
-| Module | Android | iOS | Notes |
-|---|---|---|---|
-| Core | Full | Full | Discovery, connection listing, `closeConnection`, raw APDU transport (`sendApdu`, via `YKFSmartCardInterface`), and `YubiKeyEvent` attach/detach/error notifications are all wrapped on iOS. The accessory-vs-smart-card USB transport distinction the SDK exposes is collapsed to a single `"usb"` transport string, and the SDK's QR-code scanning (`YKFQRReaderSession`) and NFC static-OTP tag reading (`YKFNFCOTPSession`) capabilities aren't exposed through the JS API on either platform. |
-| Support | Full | Full | `readInfo` and `getName` are both wrapped on iOS, including all 8 form factors and the real FIPS/SKY/pin-complexity/reset-blocked fields from `YKFManagementDeviceInfo` (previously some of these were hardcoded to `false`/`0` on iOS). |
-| Management | Full | Partial | `getDeviceInfo` and `updateDeviceConfig` are wrapped on iOS. `deviceReset` is wrapped but only works on YubiKey Bio – Multi-Protocol Edition devices on firmware 5.6+ (the SDK rejects it on any other device); there's no universal factory-reset in the iOS SDK. `setMode` has no iOS SDK equivalent — the same per-transport enable/disable behavior is available through `updateDeviceConfig`. |
-| OATH | Full | Full | The iOS SDK's full OATH feature set is wrapped. |
-| PIV | Full | Full | The iOS SDK's full PIV feature set is wrapped, including PIN/PUK/management-key operations, slot metadata, certificates, attestation, key generation, and raw sign/decrypt. `rawSignOrDecrypt` has no explicit sign-vs-decrypt flag on either platform — the payload's own padding determines the semantics — so on iOS it decrypts for RSA keys in the `KEY_MANAGEMENT` slot and signs otherwise (mathematically equivalent raw RSA operations either way). `rawSignOrDecrypt` does not support RSA3072/RSA4096 keys on iOS (the SDK's internal padding helper only handles RSA1024/RSA2048), even though those key sizes can be generated via `generateKey`. |
-| OpenPGP | Full | Not available | The YubiKit iOS SDK does not include an OpenPGP session. |
-| YubiOTP | Full | Partial | `calculateHmacSha1` is wrapped on iOS. Slot configuration, NDEF, serial/version/swap, and delete/put/update are not available in the iOS SDK (it only exposes HMAC-SHA1 challenge-response). |
-| FIDO2 | Full | Partial | `getInfo`, `makeCredential`, `getAssertion`, and `reset` are wrapped on iOS. `getInfo` exposes a smaller field set than Android (only `versions`, `extensions`, `aaguid`, `options`, `maxMsgSize`, `pinUvAuthProtocols`, `minPinLength` — the iOS SDK doesn't report the rest). Credential management (`getCredentialCount`, `getRpIdList`, `getCredentials`, `deleteCredential`, `updateUserInformation`) is not available in the iOS SDK. |
+| Module | Android | iOS |
+|---|---|---|
+| Core / Support | Full | Full |
+| Management | Full | Partial |
+| OATH | Full | Full |
+| PIV | Full | Full (no RSA3072/4096 raw sign/decrypt) |
+| OpenPGP | Full | Not available |
+| YubiOTP | Full | Partial (HMAC-SHA1 only) |
+| FIDO2 | Full | Partial (no credential management) |
+
+---
+
+## Requirements
+
+| | Minimum |
+|---|---|
+| React Native | 0.74+ with the **New Architecture enabled** |
+| iOS | 16.4+ recommended ([Podfile override required](https://doko.aniviet.com/oss/react-native-yubikey/installation) — the CocoaPods-trunk `YubiKit` pod is too old) |
+| Android | `minSdkVersion` 24 |
+
+---
 
 ## Installation
 
 ```sh
 npm install @doko/react-native-yubikit
-```
-
-```sh
+# or
 yarn add @doko/react-native-yubikit
-```
-
-```sh
+# or
 pnpm add @doko/react-native-yubikit
 ```
 
-### Requirements
+iOS needs a Podfile override and a few entitlements depending on which transports you use; Android needs USB/NFC manifest entries. See [Installation](https://doko.aniviet.com/oss/react-native-yubikey/installation) for the exact steps.
 
-- React Native 0.74+ with the New Architecture enabled (Fabric / TurboModules)
-- Android: minSdk 24
-- iOS: partial support; see the platform support table above for per-module gaps (mainly OpenPGP, YubiOTP slot configuration, and FIDO2 credential management)
+---
 
-### Android permissions
+## Quick start
 
-Add USB permission to `android/app/src/main/AndroidManifest.xml`:
+```tsx
+import { YubiKeyProvider, useYubiKey } from '@doko/react-native-yubikit';
 
-```xml
-<uses-feature android:name="android.hardware.usb.host" />
+export default function App() {
+  return (
+    <YubiKeyProvider>
+      <DeviceScreen />
+    </YubiKeyProvider>
+  );
+}
 
-<uses-permission android:name="android.permission.USB_PERMISSION" />
-```
+function DeviceScreen() {
+  const { devices, selectedDevice, startUsbDiscovery, stopUsbDiscovery } =
+    useYubiKey();
 
-For NFC:
-
-```xml
-<uses-permission android:name="android.permission.NFC" />
-<uses-feature android:name="android.hardware.nfc" android:required="false" />
-```
-
-## Basic usage
-
-Import the module namespaces you need:
-
-```ts
-import { Core, Management, Oath } from '@doko/react-native-yubikit';
-```
-
-Start USB discovery and listen for attach/detach events:
-
-```ts
-import { useEffect, useState } from 'react';
-import { Core } from '@doko/react-native-yubikit';
-import type { YubiKeyDevice, YubiKeyEvent } from '@doko/react-native-yubikit';
-
-function useYubiKey() {
-  const [device, setDevice] = useState<YubiKeyDevice | null>(null);
-
-  useEffect(() => {
-    Core.startUsbDiscovery({ handlePermissions: true });
-
-    const subscription = Core.addYubiKeyListener((event: YubiKeyEvent) => {
-      if (event.type === 'attached') {
-        setDevice(event.device);
-      } else if (event.type === 'detached') {
-        setDevice((current) =>
-          current?.handle === event.handle ? null : current
-        );
-      }
-    });
-
-    return () => {
-      subscription.remove();
-      Core.stopUsbDiscovery();
-    };
-  }, []);
-
-  return device;
+  // startUsbDiscovery({ handlePermissions: true }) to begin listening,
+  // then read/write against selectedDevice.handle with any module below.
 }
 ```
 
-## Module examples
-
-### Management
-
-Read device info from a discovered YubiKey:
-
 ```ts
-import { Management } from '@doko/react-native-yubikit';
+import { Management, Oath, Piv } from '@doko/react-native-yubikit';
 
 const info = await Management.getDeviceInfo(deviceHandle);
-console.log(info.versionName, info.formFactor, info.serialNumber);
-```
-
-### OATH
-
-Add a TOTP credential and calculate codes:
-
-```ts
-import { Oath } from '@doko/react-native-yubikit';
-
-await Oath.putCredential(
-  deviceHandle,
-  {
-    accountName: 'alice@example.com',
-    issuer: 'Example Corp',
-    oathType: 'TOTP',
-    hashAlgorithm: 'SHA1',
-    secret: 'c2VjcmV0', // base64-encoded shared secret
-    digits: 6,
-    period: 30,
-    counter: 0,
-  },
-  false // requireTouch
-);
-
-const { credentials } = await Oath.getCredentials(deviceHandle);
-const { codes } = await Oath.calculateCodes(deviceHandle);
-```
-
-### PIV
-
-Verify a PIN and generate a key in a slot:
-
-```ts
-import { Piv } from '@doko/react-native-yubikit';
-
 await Piv.verifyPin(deviceHandle, '123456');
-
-const publicKey = await Piv.generateKey(
-  deviceHandle,
-  'AUTHENTICATION',
-  'ECCP256',
-  'DEFAULT',
-  'DEFAULT'
-);
+const { credentials } = await Oath.getCredentials(deviceHandle);
 ```
 
-### OpenPGP
+More examples for every module are in [Usage Examples](https://doko.aniviet.com/oss/react-native-yubikey/usage).
 
-Verify the user PIN and read metadata:
-
-```ts
-import { OpenPgp } from '@doko/react-native-yubikit';
-
-await OpenPgp.verifyUserPin(deviceHandle, '123456');
-const version = await OpenPgp.getVersion(deviceHandle);
-const counter = await OpenPgp.getSignatureCounter(deviceHandle);
-```
-
-### YubiOTP
-
-Read slot configuration state and perform HMAC-SHA1 challenge-response:
-
-```ts
-import { YubiOtp } from '@doko/react-native-yubikit';
-
-const state = await YubiOtp.getConfigurationState(deviceHandle);
-
-const response = await YubiOtp.calculateHmacSha1(
-  deviceHandle,
-  'TWO',
-  'Y2hhbGxlbmdl' // base64-encoded challenge
-);
-```
-
-### FIDO2 / WebAuthn
-
-Read authenticator info and list resident credentials:
-
-```ts
-import { Fido } from '@doko/react-native-yubikit';
-
-const info = await Fido.getInfo(deviceHandle);
-console.log(info.versions.join(', '));
-
-const count = await Fido.getCredentialCount(deviceHandle, pin);
-const rpIds = await Fido.getRpIdList(deviceHandle, pin);
-```
-
-### Support
-
-Identify the connected device by name:
-
-```ts
-import { Support } from '@doko/react-native-yubikit';
-
-const info = await Support.readInfo(deviceHandle);
-const name = await Support.getName(info);
-console.log(name);
-```
+---
 
 ## Example app
 
-A runnable example app is included in the [`example/`](./example) directory. It uses [Expo Router](https://docs.expo.dev/router/introduction/) and demonstrates every supported module.
-
-From the root of this repository:
+A runnable example app is included in [`example/`](./example) (Expo Router, demonstrates every supported module).
 
 ```sh
 pnpm install
 pnpm example start
 ```
 
-Then press `a` for Android, `i` for iOS, or `w` for web.
+Then press `a` for Android or `i` for iOS.
 
-## Development
+---
+
+## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow, build instructions, and how to send a pull request.
+
+---
 
 ## License
 
 MIT
-
----
