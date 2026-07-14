@@ -1,4 +1,4 @@
-# @doko/react-native-yubikit
+react-native-yubikit
 
 A React Native TurboModule wrapper around Yubico's native [YubiKit Android](https://developers.yubico.com/yubikit-android/) and [YubiKit iOS](https://developers.yubico.com/yubikit-ios/) SDKs, for talking to YubiKey hardware over USB and NFC.
 
@@ -12,25 +12,25 @@ A React Native TurboModule wrapper around Yubico's native [YubiKit Android](http
 
 📖 **Full documentation:** [doko.aniviet.com/oss/react-native-yubikey](https://doko.aniviet.com/oss/react-native-yubikey)
 
-The docs site covers requirements, installation (including the iOS Podfile override you need), usage examples for every module, security notes, advanced patterns, and troubleshooting. This README is deliberately short — start there for anything beyond a quick look.
+The docs site covers requirements, installation (including the iOS Podfile override you need), usage examples for every module, security notes, advanced patterns, and troubleshooting. This README is deliberately short - start there for anything beyond a quick look.
 
 ---
 
 ## Features
 
-- 🔌 **USB + NFC discovery** — attach/detach events via a single `YubiKeyEvent` stream
+- 🔌 **USB + NFC discovery** - attach/detach events via a single `YubiKeyEvent` stream
 - 🧩 **8 native modules**, exposed as namespaces: `Core`, `Support`, `Management`, `Oath`, `Piv`, `OpenPgp`, `YubiOtp`, `Fido`
-- 🪝 **`YubiKeyProvider` + `useYubiKey()`** — drop-in device discovery/selection state, no boilerplate required
-- 🔐 **PIV** — PIN/PUK, slot metadata, certificates, key generation, raw sign/decrypt
-- 🔑 **FIDO2/WebAuthn** — authenticator info, registration, authentication
-- ⏱️ **OATH** — TOTP/HOTP credential management and code calculation
-- 🆕 **New Architecture only** — built as Fabric/TurboModules with Codegen, no old-bridge fallback
+- 🪝 **`YubiKeyProvider` + `useYubiKey()`** - drop-in device discovery/selection state, no boilerplate required
+- 🔐 **PIV** - PIN/PUK, slot metadata, certificates, key generation, raw sign/decrypt
+- 🔑 **FIDO2/WebAuthn** - authenticator info, registration, authentication
+- ⏱️ **OATH** - TOTP/HOTP credential management and code calculation
+- 🆕 **New Architecture only** - built as Fabric/TurboModules with Codegen, no old-bridge fallback
 
 ---
 
 ## Platform support
 
-Android has full parity across every module. iOS is missing OpenPGP entirely, YubiOTP slot programming, and FIDO2 resident-credential management — these gaps come from the underlying YubiKit iOS SDK itself, not from this wrapper. See the [full platform support table](https://doko.aniviet.com/oss/react-native-yubikey) on the docs site for the exact per-method breakdown.
+Android has full parity across every module. iOS is missing OpenPGP entirely, YubiOTP slot programming, and FIDO2 resident-credential management - these gaps come from the underlying YubiKit iOS SDK itself, not from this wrapper. See the [full platform support table](https://doko.aniviet.com/oss/react-native-yubikey) on the docs site for the exact per-method breakdown.
 
 | Module         | Android | iOS                                     |
 | -------------- | ------- | --------------------------------------- |
@@ -49,7 +49,7 @@ Android has full parity across every module. iOS is missing OpenPGP entirely, Yu
 |              | Minimum                                                                                                                                                        |
 | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | React Native | 0.74+ with the **New Architecture enabled**                                                                                                                    |
-| iOS          | 16.4+ recommended ([Podfile override required](https://doko.aniviet.com/oss/react-native-yubikey/installation) — the CocoaPods-trunk `YubiKit` pod is too old) |
+| iOS          | 16.4+ recommended ([Podfile override required](https://doko.aniviet.com/oss/react-native-yubikey/installation) - the CocoaPods-trunk `YubiKit` pod is too old) |
 | Android      | `minSdkVersion` 24                                                                                                                                             |
 
 ---
