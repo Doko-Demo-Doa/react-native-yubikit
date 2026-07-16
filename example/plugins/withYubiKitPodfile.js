@@ -14,9 +14,9 @@ const POD_OVERRIDE =
 module.exports = function withYubiKitPodfile(config) {
   return withDangerousMod(config, [
     'ios',
-    (config) => {
+    (cfg) => {
       const podfilePath = path.join(
-        config.modRequest.platformProjectRoot,
+        cfg.modRequest.platformProjectRoot,
         'Podfile'
       );
       let contents = fs.readFileSync(podfilePath, 'utf-8');
@@ -29,7 +29,7 @@ module.exports = function withYubiKitPodfile(config) {
         fs.writeFileSync(podfilePath, contents);
       }
 
-      return config;
+      return cfg;
     },
   ]);
 };
