@@ -23,15 +23,22 @@ export function DeviceBanner() {
     selectDevice,
     usbActive,
     toggleUsbDiscovery,
+    nfcActive,
+    toggleNfcDiscovery,
   } = useYubiKey();
 
   return (
     <Card className="mb-4">
       <CardHeader className="flex-row items-center justify-between">
         <CardTitle>YubiKey</CardTitle>
-        <Chip color={usbActive ? 'success' : 'default'} size="sm">
-          {usbActive ? 'Scanning' : 'Idle'}
-        </Chip>
+        <View className="flex-row gap-2">
+          <Chip color={usbActive ? 'success' : 'default'} size="sm">
+            USB {usbActive ? 'scanning' : 'idle'}
+          </Chip>
+          <Chip color={nfcActive ? 'success' : 'default'} size="sm">
+            NFC {nfcActive ? 'scanning' : 'idle'}
+          </Chip>
+        </View>
       </CardHeader>
       <CardBody className="gap-2">
         {selectedDevice ? (
@@ -71,13 +78,20 @@ export function DeviceBanner() {
           ))}
         </RadioGroup>
       </CardBody>
-      <CardFooter>
+      <CardFooter className="flex-row gap-2">
         <Button
           variant={usbActive ? 'outline' : 'primary'}
           size="sm"
           onPress={toggleUsbDiscovery}
         >
           {usbActive ? 'Stop USB discovery' : 'Start USB discovery'}
+        </Button>
+        <Button
+          variant={nfcActive ? 'outline' : 'primary'}
+          size="sm"
+          onPress={toggleNfcDiscovery}
+        >
+          {nfcActive ? 'Stop NFC discovery' : 'Start NFC discovery'}
         </Button>
       </CardFooter>
     </Card>

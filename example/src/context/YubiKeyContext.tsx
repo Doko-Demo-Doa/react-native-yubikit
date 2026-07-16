@@ -23,6 +23,8 @@ interface YubiKeyContextValue {
   selectDevice: (handle: string) => void;
   usbActive: boolean;
   toggleUsbDiscovery: () => Promise<void>;
+  nfcActive: boolean;
+  toggleNfcDiscovery: () => Promise<void>;
   logs: LogEntry[];
   log: (message: string, isError?: boolean) => void;
   clearLogs: () => void;
@@ -36,6 +38,7 @@ export function YubiKeyProvider({ children }: { children: ReactNode }) {
   const [devices, setDevices] = useState<YubiKeyDevice[]>([]);
   const [selectedHandle, setSelectedHandle] = useState<string | null>(null);
   const [usbActive, setUsbActive] = useState(false);
+  const [nfcActive, setNfcActive] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isBusy, setIsBusy] = useState(false);
   const nextLogId = useRef(0);
@@ -51,7 +54,10 @@ export function YubiKeyProvider({ children }: { children: ReactNode }) {
     const subscription = Core.addYubiKeyListener((event: YubiKeyEvent) => {
       console.log('YubiKey event:', event);
       if (event.type === 'attached') {
-        setDevices([event.device]);
+        setDevices((prev) => [
+          event.device,
+          ...prev.filter((d) => d.handle !== event.device.handle),
+        ]);
         setSelectedHandle((prev) => prev ?? event.device.handle);
         log(`YubiKey attached (${event.device.transport.toUpperCase()})`);
 
@@ -88,6 +94,22 @@ export function YubiKeyProvider({ children }: { children: ReactNode }) {
     }
   }, [usbActive, log]);
 
+  const toggleNfcDiscovery = useCallback(async () => {
+    try {
+      if (nfcActive) {
+        Core.stopNfcDiscovery();
+        setNfcActive(false);
+        log('Stopped NFC discovery');
+      } else {
+        Core.startNfcDiscovery();
+        setNfcActive(true);
+        log('Started NFC discovery — tap a YubiKey to the back of the device');
+      }
+    } catch (e) {
+      log(`NFC discovery error: ${String(e)}`, true);
+    }
+  }, [nfcActive, log]);
+
   const selectDevice = useCallback((handle: string) => {
     setSelectedHandle(handle);
   }, []);
@@ -119,6 +141,8 @@ export function YubiKeyProvider({ children }: { children: ReactNode }) {
       selectDevice,
       usbActive,
       toggleUsbDiscovery,
+      nfcActive,
+      toggleNfcDiscovery,
       logs,
       log,
       clearLogs,
@@ -131,6 +155,8 @@ export function YubiKeyProvider({ children }: { children: ReactNode }) {
       selectDevice,
       usbActive,
       toggleUsbDiscovery,
+      nfcActive,
+      toggleNfcDiscovery,
       logs,
       log,
       clearLogs,

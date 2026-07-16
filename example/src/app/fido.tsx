@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Platform } from 'react-native';
 import { Button, Card, ListGroup } from 'heroui-native';
 import { Fido } from 'react-native-yubikit';
 import type { Ctap2Info } from 'react-native-yubikit';
@@ -6,8 +7,11 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { DeviceBanner } from '@/components/DeviceBanner';
 import { LabeledInput } from '@/components/LabeledInput';
 import { LogPanel } from '@/components/LogPanel';
+import { PlatformNotice } from '@/components/PlatformNotice';
 import { useYubiKey } from '@/context/YubiKeyContext';
 import { MasterLayout } from '@/components/layouts/MasterLayout';
+
+const isCredentialManagementSupported = Platform.OS === 'android';
 
 export default function FidoScreen() {
   const { selectedDevice, log, withBusy, isBusy } = useYubiKey();
@@ -82,6 +86,11 @@ export default function FidoScreen() {
         </Card.Footer>
       </Card>
 
+      <PlatformNotice
+        platform="android"
+        message="FIDO2 resident-credential management is not available on iOS - the YubiKit iOS SDK doesn't expose it. Authenticator info above still works on both platforms."
+      />
+
       <Card className="mb-4">
         <Card.Header>
           <Card.Title>Resident credentials</Card.Title>
@@ -113,7 +122,12 @@ export default function FidoScreen() {
         <Card.Footer>
           <Button
             size="sm"
-            isDisabled={!selectedDevice || isBusy || !pin}
+            isDisabled={
+              !selectedDevice ||
+              isBusy ||
+              !pin ||
+              !isCredentialManagementSupported
+            }
             onPress={readResidentCredentials}
           >
             List credentials

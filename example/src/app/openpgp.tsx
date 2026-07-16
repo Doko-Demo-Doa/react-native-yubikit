@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Platform } from 'react-native';
 import { Button, Card, ListGroup } from 'heroui-native';
 import { OpenPgp } from 'react-native-yubikit';
 import type { Version } from 'react-native-yubikit';
@@ -6,8 +7,11 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { DeviceBanner } from '@/components/DeviceBanner';
 import { LabeledInput } from '@/components/LabeledInput';
 import { LogPanel } from '@/components/LogPanel';
+import { PlatformNotice } from '@/components/PlatformNotice';
 import { useYubiKey } from '@/context/YubiKeyContext';
 import { MasterLayout } from '@/components/layouts/MasterLayout';
+
+const isSupported = Platform.OS === 'android';
 
 export default function OpenPgpScreen() {
   const { selectedDevice, log, withBusy, isBusy } = useYubiKey();
@@ -52,6 +56,11 @@ export default function OpenPgpScreen() {
 
       <DeviceBanner />
 
+      <PlatformNotice
+        platform="android"
+        message="OpenPGP is not available on iOS - the YubiKit iOS SDK has no OpenPGP session. This screen only works on Android."
+      />
+
       <Card className="mb-4 gap-4">
         <Card.Body>
           <LabeledInput
@@ -65,7 +74,7 @@ export default function OpenPgpScreen() {
         <Card.Footer>
           <Button
             size="sm"
-            isDisabled={!selectedDevice || isBusy || !pin}
+            isDisabled={!selectedDevice || isBusy || !pin || !isSupported}
             onPress={verifyUserPin}
           >
             Verify PIN
@@ -103,7 +112,7 @@ export default function OpenPgpScreen() {
           <Button
             size="sm"
             variant="secondary"
-            isDisabled={!selectedDevice || isBusy}
+            isDisabled={!selectedDevice || isBusy || !isSupported}
             onPress={readVersion}
           >
             Read version
@@ -111,7 +120,7 @@ export default function OpenPgpScreen() {
           <Button
             size="sm"
             variant="secondary"
-            isDisabled={!selectedDevice || isBusy}
+            isDisabled={!selectedDevice || isBusy || !isSupported}
             onPress={readSignatureCounter}
           >
             Read signature counter

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Platform } from 'react-native';
 import { Button, Card, ListGroup } from 'heroui-native';
 import { YubiOtp } from 'react-native-yubikit';
 import type { ConfigurationState } from 'react-native-yubikit';
@@ -6,8 +7,11 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { DeviceBanner } from '@/components/DeviceBanner';
 import { LabeledInput } from '@/components/LabeledInput';
 import { LogPanel } from '@/components/LogPanel';
+import { PlatformNotice } from '@/components/PlatformNotice';
 import { useYubiKey } from '@/context/YubiKeyContext';
 import { MasterLayout } from '@/components/layouts/MasterLayout';
+
+const isConfigurationStateSupported = Platform.OS === 'android';
 
 export default function YubiOtpScreen() {
   const { selectedDevice, log, withBusy, isBusy } = useYubiKey();
@@ -46,6 +50,11 @@ export default function YubiOtpScreen() {
 
       <DeviceBanner />
 
+      <PlatformNotice
+        platform="android"
+        message="Reading slot state is not available on iOS - the YubiKit iOS SDK only exposes calculateHmacSha1 for YubiOTP. The challenge-response card below still works on both platforms."
+      />
+
       <Card className="mb-4">
         <Card.Header>
           <Card.Title>Slot state</Card.Title>
@@ -75,7 +84,9 @@ export default function YubiOtpScreen() {
         <Card.Footer>
           <Button
             size="sm"
-            isDisabled={!selectedDevice || isBusy}
+            isDisabled={
+              !selectedDevice || isBusy || !isConfigurationStateSupported
+            }
             onPress={readConfigurationState}
           >
             Read slot state
