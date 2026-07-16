@@ -8,6 +8,15 @@ import type {
   PublicKeyCredentialRequestOptions,
 } from './types';
 
+/** COSE algorithm identifiers (RFC 8152 §8), as used in `pubKeyCredParams`. */
+export const COSE_ALGORITHM = {
+  ES256: -7,
+  ES384: -35,
+  ES512: -36,
+  RS256: -257,
+  EdDSA: -8,
+} as const;
+
 export function getInfo(deviceHandle: string): Promise<Ctap2Info> {
   return NativeYubikitFido.getInfo(deviceHandle) as Promise<Ctap2Info>;
 }

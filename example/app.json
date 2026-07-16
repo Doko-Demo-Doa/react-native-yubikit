@@ -13,7 +13,22 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "yubikit.example"
+      "bundleIdentifier": "yubikit.example",
+      "infoPlist": {
+        "NFCReaderUsageDescription": "This app uses NFC to communicate with your YubiKey",
+        "com.apple.developer.nfc.readersession.formats": ["TAG"],
+        "com.apple.developer.nfc.readersession.iso7816.select-identifiers": [
+          "A000000527471117",
+          "A0000006472F0001",
+          "A0000005272101",
+          "A000000308",
+          "A000000527200101",
+          "A000000151000000"
+        ]
+      },
+      "entitlements": {
+        "com.apple.developer.nfc.readersession.formats": ["TAG"]
+      }
     },
     "android": {
       "adaptiveIcon": {

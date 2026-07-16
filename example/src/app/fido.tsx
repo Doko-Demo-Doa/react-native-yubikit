@@ -10,6 +10,11 @@ import { LogPanel } from '@/components/LogPanel';
 import { PlatformNotice } from '@/components/PlatformNotice';
 import { useYubiKey } from '@/context/YubiKeyContext';
 import { MasterLayout } from '@/components/layouts/MasterLayout';
+import { randomBase64 } from '@/utils/base64';
+import {
+  WEBAUTHN_CHALLENGE_BYTE_LENGTH,
+  WEBAUTHN_USER_ID_BYTE_LENGTH,
+} from '@/constants/webauthn';
 
 const isCredentialManagementSupported = Platform.OS === 'android';
 
@@ -19,6 +24,12 @@ export default function FidoScreen() {
   const [pin, setPin] = useState('');
   const [credentialCount, setCredentialCount] = useState<number | null>(null);
   const [rpIds, setRpIds] = useState<string[]>([]);
+  const [effectiveDomain, setEffectiveDomain] = useState('example.com');
+  const [ceremonyPin, setCeremonyPin] = useState('');
+  const [credentialId, setCredentialId] = useState<string | null>(null);
+  const [assertionUserHandle, setAssertionUserHandle] = useState<string | null>(
+    null
+  );
 
   const readInfo = async () => {
     if (!selectedDevice) return;
@@ -26,6 +37,50 @@ export default function FidoScreen() {
       const result = await Fido.getInfo(selectedDevice.handle);
       setInfo(result);
       log(`Authenticator supports ${result.versions.join(', ')}`);
+    });
+  };
+
+  const register = async () => {
+    if (!selectedDevice) return;
+    await withBusy(async () => {
+      const credential = await Fido.makeCredential(
+        selectedDevice.handle,
+        {
+          rp: { id: effectiveDomain, name: 'Yubikit Example' },
+          user: {
+            id: randomBase64(WEBAUTHN_USER_ID_BYTE_LENGTH),
+            name: 'demo-user',
+            displayName: 'Demo User',
+          },
+          challenge: randomBase64(WEBAUTHN_CHALLENGE_BYTE_LENGTH),
+          pubKeyCredParams: [
+            { type: 'public-key', alg: Fido.COSE_ALGORITHM.ES256 },
+          ],
+        },
+        effectiveDomain,
+        ceremonyPin || undefined
+      );
+      setCredentialId(credential.rawId);
+      setAssertionUserHandle(null);
+      log(`Registered credential ${credential.rawId.slice(0, 12)}...`);
+    });
+  };
+
+  const authenticate = async () => {
+    if (!selectedDevice || !credentialId) return;
+    await withBusy(async () => {
+      const assertion = await Fido.getAssertion(
+        selectedDevice.handle,
+        {
+          challenge: randomBase64(WEBAUTHN_CHALLENGE_BYTE_LENGTH),
+          rpId: effectiveDomain,
+          allowCredentials: [{ type: 'public-key', id: credentialId }],
+        },
+        effectiveDomain,
+        ceremonyPin || undefined
+      );
+      setAssertionUserHandle(assertion.response.userHandle ?? 'none');
+      log('Authenticated with the registered credential');
     });
   };
 
@@ -44,10 +99,76 @@ export default function FidoScreen() {
     <MasterLayout>
       <ScreenHeader
         title="FIDO2 / WebAuthn"
-        description="Authenticator info and resident credential management."
+        description="Register/authenticate ceremonies, authenticator info, and resident credential management."
       />
 
       <DeviceBanner />
+
+      <Card className="mb-4 gap-4">
+        <Card.Header>
+          <Card.Title>Register &amp; authenticate</Card.Title>
+          <Card.Description>
+            Runs a real makeCredential/getAssertion ceremony, so the FIDO2 PIN
+            is actually exercised (leave PIN blank if the key has none set).
+          </Card.Description>
+        </Card.Header>
+        <Card.Body className="gap-2">
+          <LabeledInput
+            label="Relying party ID"
+            value={effectiveDomain}
+            onChangeText={setEffectiveDomain}
+            placeholder="example.com"
+          />
+          <LabeledInput
+            label="PIN"
+            value={ceremonyPin}
+            onChangeText={setCeremonyPin}
+            secureTextEntry
+            placeholder="FIDO2 PIN (optional)"
+          />
+          {credentialId ? (
+            <ListGroup variant="transparent">
+              <ListGroup.Item>
+                <ListGroup.ItemContent>
+                  <ListGroup.ItemTitle>Credential ID</ListGroup.ItemTitle>
+                  <ListGroup.ItemDescription>
+                    {credentialId}
+                  </ListGroup.ItemDescription>
+                </ListGroup.ItemContent>
+              </ListGroup.Item>
+            </ListGroup>
+          ) : null}
+          {assertionUserHandle ? (
+            <ListGroup variant="transparent">
+              <ListGroup.Item>
+                <ListGroup.ItemContent>
+                  <ListGroup.ItemTitle>Last assertion</ListGroup.ItemTitle>
+                  <ListGroup.ItemDescription>
+                    user handle: {assertionUserHandle}
+                  </ListGroup.ItemDescription>
+                </ListGroup.ItemContent>
+              </ListGroup.Item>
+            </ListGroup>
+          ) : null}
+        </Card.Body>
+        <Card.Footer className="flex-row gap-2">
+          <Button
+            size="sm"
+            isDisabled={!selectedDevice || isBusy || !effectiveDomain}
+            onPress={register}
+          >
+            Register credential
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            isDisabled={!selectedDevice || isBusy || !credentialId}
+            onPress={authenticate}
+          >
+            Authenticate
+          </Button>
+        </Card.Footer>
+      </Card>
 
       <Card className="mb-4">
         <Card.Header>
@@ -96,7 +217,7 @@ export default function FidoScreen() {
           <Card.Title>Resident credentials</Card.Title>
           <Card.Description>Requires the FIDO2 PIN.</Card.Description>
         </Card.Header>
-        <Card.Body className="gap-2">
+        <Card.Body className="gap-2 mb-3">
           <LabeledInput
             label="PIN"
             value={pin}
