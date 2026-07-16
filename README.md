@@ -1,5 +1,7 @@
 react-native-yubikit
 
+![react-native-yubikit](https://raw.githubusercontent.com/Doko-Demo-Doa/react-native-yubikit/main/.github/assets/yubikit.webp)
+
 A React Native TurboModule wrapper around Yubico's native [YubiKit Android](https://developers.yubico.com/yubikit-android/) and [YubiKit iOS](https://developers.yubico.com/yubikit-ios/) SDKs, for talking to YubiKey hardware over USB and NFC.
 
 [![npm version](https://img.shields.io/npm/v/@doko/react-native-yubikit?style=for-the-badge&color=blue)](https://www.npmjs.com/package/@doko/react-native-yubikit)
