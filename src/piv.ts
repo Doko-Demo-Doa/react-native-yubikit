@@ -41,8 +41,17 @@ export function setManagementKey(
   );
 }
 
-export function verifyPin(deviceHandle: string, pin: string): Promise<void> {
-  return NativeYubikitPiv.verifyPin(deviceHandle, pin);
+/**
+ * Pass `connectionHandle` (from `Core.requestConnection`) to run this on an
+ * already-open connection instead of a one-off one - required if a later
+ * call (e.g. `rawSignOrDecrypt`) needs to see the verified PIN on Android.
+ */
+export function verifyPin(
+  deviceHandle: string,
+  pin: string,
+  connectionHandle?: string
+): Promise<void> {
+  return NativeYubikitPiv.verifyPin(deviceHandle, pin, connectionHandle);
 }
 
 export function getPinAttempts(deviceHandle: string): Promise<number> {
@@ -107,19 +116,22 @@ export function getManagementKeyMetadata(
 
 export function getSlotMetadata(
   deviceHandle: string,
-  slot: PivSlot
+  slot: PivSlot,
+  connectionHandle?: string
 ): Promise<PivSlotMetadata> {
   return NativeYubikitPiv.getSlotMetadata(
     deviceHandle,
-    slot
+    slot,
+    connectionHandle
   ) as Promise<PivSlotMetadata>;
 }
 
 export function getCertificate(
   deviceHandle: string,
-  slot: PivSlot
+  slot: PivSlot,
+  connectionHandle?: string
 ): Promise<Base64String> {
-  return NativeYubikitPiv.getCertificate(deviceHandle, slot);
+  return NativeYubikitPiv.getCertificate(deviceHandle, slot, connectionHandle);
 }
 
 export function putCertificate(
@@ -174,13 +186,15 @@ export function rawSignOrDecrypt(
   deviceHandle: string,
   slot: PivSlot,
   keyType: PivKeyType,
-  payload: Base64String
+  payload: Base64String,
+  connectionHandle?: string
 ): Promise<Base64String> {
   return NativeYubikitPiv.rawSignOrDecrypt(
     deviceHandle,
     slot,
     keyType,
-    payload
+    payload,
+    connectionHandle
   );
 }
 

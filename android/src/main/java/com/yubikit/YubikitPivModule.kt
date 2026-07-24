@@ -3,6 +3,7 @@ package com.yubikit
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
+import com.yubico.yubikit.core.smartcard.SmartCardConnection
 import com.yubico.yubikit.piv.PivSession
 import com.yubikit.utils.YubikitUtils.base64Decode
 import com.yubikit.utils.YubikitUtils.base64Encode
@@ -23,16 +24,27 @@ class YubikitPivModule(reactContext: ReactApplicationContext) :
 
   override fun getName(): String = NAME
 
+  // PIV security status (PIN verified, management key authenticated) is scoped to
+  // the SmartCardConnection, not the device - opening a new connection per call
+  // (the `connectionHandle == null` path) throws that status away between calls.
+  // Passing a connectionHandle held open via Core.requestConnection lets a
+  // verifyPin() followed by a rawSignOrDecrypt() see the same verified PIN.
   private inline fun <R> withPivSession(
     deviceHandle: String,
     promise: Promise,
+    connectionHandle: String? = null,
     crossinline block: (PivSession) -> R
   ) {
     moduleScope.launch {
       try {
-        val result = YubiKitManagerHolder.withSmartCard(deviceHandle) { connection ->
-          PivSession(connection).use { session ->
-            block(session)
+        val result = if (connectionHandle != null) {
+          val connection = YubiKitManagerHolder.getConnection(connectionHandle) as SmartCardConnection
+          block(PivSession(connection))
+        } else {
+          YubiKitManagerHolder.withSmartCard(deviceHandle) { connection ->
+            PivSession(connection).use { session ->
+              block(session)
+            }
           }
         }
         @Suppress("UNCHECKED_CAST")
@@ -76,8 +88,13 @@ class YubikitPivModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  override fun verifyPin(deviceHandle: String, pin: String, promise: Promise) {
-    withPivSession(deviceHandle, promise) { it.verifyPin(pin.toCharArray()) }
+  override fun verifyPin(
+    deviceHandle: String,
+    pin: String,
+    connectionHandle: String?,
+    promise: Promise
+  ) {
+    withPivSession(deviceHandle, promise, connectionHandle) { it.verifyPin(pin.toCharArray()) }
   }
 
   override fun getPinAttempts(deviceHandle: String, promise: Promise) {
@@ -187,29 +204,31 @@ class YubikitPivModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  override fun getSlotMetadata(deviceHandle: String, slot: String, promise: Promise) {
-    moduleScope.launch {
-      try {
-        val meta = YubiKitManagerHolder.withSmartCard(deviceHandle) { connection ->
-          PivSession(connection).use { session ->
-            session.getSlotMetadata(slotFromString(slot))
-          }
-        }
-        promise.resolve(Arguments.createMap().apply {
-          putString("keyType", com.yubikit.utils.YubikitUtils.keyTypeToString(meta.keyType))
-          putString("pinPolicy", com.yubikit.utils.YubikitUtils.pinPolicyToString(meta.pinPolicy))
-          putString("touchPolicy", com.yubikit.utils.YubikitUtils.touchPolicyToString(meta.touchPolicy))
-          putBoolean("generated", meta.isGenerated)
-          meta.publicKeyValues?.let { putString("publicKey", base64Encode(it.encoded)) }
-        })
-      } catch (e: Exception) {
-        promise.reject("PIV_ERROR", e.message, e)
+  override fun getSlotMetadata(
+    deviceHandle: String,
+    slot: String,
+    connectionHandle: String?,
+    promise: Promise
+  ) {
+    withPivSession(deviceHandle, promise, connectionHandle) { session ->
+      val meta = session.getSlotMetadata(slotFromString(slot))
+      Arguments.createMap().apply {
+        putString("keyType", com.yubikit.utils.YubikitUtils.keyTypeToString(meta.keyType))
+        putString("pinPolicy", com.yubikit.utils.YubikitUtils.pinPolicyToString(meta.pinPolicy))
+        putString("touchPolicy", com.yubikit.utils.YubikitUtils.touchPolicyToString(meta.touchPolicy))
+        putBoolean("generated", meta.isGenerated)
+        meta.publicKeyValues?.let { putString("publicKey", base64Encode(it.encoded)) }
       }
     }
   }
 
-  override fun getCertificate(deviceHandle: String, slot: String, promise: Promise) {
-    withPivSession(deviceHandle, promise) {
+  override fun getCertificate(
+    deviceHandle: String,
+    slot: String,
+    connectionHandle: String?,
+    promise: Promise
+  ) {
+    withPivSession(deviceHandle, promise, connectionHandle) {
       base64Encode(it.getCertificate(slotFromString(slot)).encoded)
     }
   }
@@ -272,9 +291,10 @@ class YubikitPivModule(reactContext: ReactApplicationContext) :
     slot: String,
     keyType: String,
     payload: String,
+    connectionHandle: String?,
     promise: Promise
   ) {
-    withPivSession(deviceHandle, promise) {
+    withPivSession(deviceHandle, promise, connectionHandle) {
       base64Encode(
         it.rawSignOrDecrypt(
           slotFromString(slot),

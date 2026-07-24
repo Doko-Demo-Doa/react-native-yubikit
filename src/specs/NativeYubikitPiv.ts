@@ -49,7 +49,18 @@ export interface Spec extends TurboModule {
     requireTouch: boolean
   ): Promise<void>;
 
-  verifyPin(deviceHandle: string, pin: string): Promise<void>;
+  /**
+   * `connectionHandle` (from `Core.requestConnection`) is optional - when
+   * omitted, a fresh connection is opened and closed for just this call. On
+   * Android, PIN-verified status is scoped to the connection, not the
+   * device, so verifying here and signing in a later call only sees the
+   * verified PIN if both calls share the same held connectionHandle.
+   */
+  verifyPin(
+    deviceHandle: string,
+    pin: string,
+    connectionHandle?: string
+  ): Promise<void>;
   getPinAttempts(deviceHandle: string): Promise<number>;
   changePin(
     deviceHandle: string,
@@ -73,9 +84,17 @@ export interface Spec extends TurboModule {
   getManagementKeyMetadata(
     deviceHandle: string
   ): Promise<PivManagementKeyMetadata>;
-  getSlotMetadata(deviceHandle: string, slot: string): Promise<PivSlotMetadata>;
+  getSlotMetadata(
+    deviceHandle: string,
+    slot: string,
+    connectionHandle?: string
+  ): Promise<PivSlotMetadata>;
 
-  getCertificate(deviceHandle: string, slot: string): Promise<string>;
+  getCertificate(
+    deviceHandle: string,
+    slot: string,
+    connectionHandle?: string
+  ): Promise<string>;
   putCertificate(
     deviceHandle: string,
     slot: string,
@@ -99,7 +118,8 @@ export interface Spec extends TurboModule {
     deviceHandle: string,
     slot: string,
     keyType: string,
-    payload: string
+    payload: string,
+    connectionHandle?: string
   ): Promise<string>;
 
   getBioMetadata(deviceHandle: string): Promise<PivBioMetadata>;

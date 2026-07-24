@@ -315,8 +315,14 @@ RCT_EXPORT_MODULE(YubikitPiv)
   }];
 }
 
+// `connectionHandle` is accepted for API parity with Android, where PIN-verified
+// status is scoped to the connection and a fresh one is opened per call unless a
+// held connectionHandle is passed. iOS doesn't need it: connectionForHandle:
+// already caches one persistent connection per deviceHandle, reused across calls,
+// so verified PIN status here already survives to a later rawSignOrDecrypt call.
 - (void)verifyPin:(NSString *)deviceHandle
               pin:(NSString *)pin
+ connectionHandle:(nullable NSString *)connectionHandle
           resolve:(RCTPromiseResolveBlock)resolve
            reject:(RCTPromiseRejectBlock)reject {
   id<YKFConnectionProtocol> connection = [self connectionForHandle:deviceHandle reject:reject];
@@ -525,6 +531,7 @@ RCT_EXPORT_MODULE(YubikitPiv)
 
 - (void)getSlotMetadata:(NSString *)deviceHandle
                    slot:(NSString *)slot
+       connectionHandle:(nullable NSString *)connectionHandle
                 resolve:(RCTPromiseResolveBlock)resolve
                  reject:(RCTPromiseRejectBlock)reject {
   id<YKFConnectionProtocol> connection = [self connectionForHandle:deviceHandle reject:reject];
@@ -557,6 +564,7 @@ RCT_EXPORT_MODULE(YubikitPiv)
 
 - (void)getCertificate:(NSString *)deviceHandle
                    slot:(NSString *)slot
+       connectionHandle:(nullable NSString *)connectionHandle
                 resolve:(RCTPromiseResolveBlock)resolve
                  reject:(RCTPromiseRejectBlock)reject {
   id<YKFConnectionProtocol> connection = [self connectionForHandle:deviceHandle reject:reject];
@@ -719,6 +727,7 @@ RCT_EXPORT_MODULE(YubikitPiv)
                     slot:(NSString *)slot
                  keyType:(NSString *)keyType
                  payload:(NSString *)payload
+        connectionHandle:(nullable NSString *)connectionHandle
                  resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject {
   id<YKFConnectionProtocol> connection = [self connectionForHandle:deviceHandle reject:reject];
