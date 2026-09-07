@@ -59,7 +59,7 @@ export interface Spec extends TurboModule {
   verifyPin(
     deviceHandle: string,
     pin: string,
-    connectionHandle?: string
+    connectionHandle?: string | null
   ): Promise<void>;
   getPinAttempts(deviceHandle: string): Promise<number>;
   changePin(
@@ -87,13 +87,13 @@ export interface Spec extends TurboModule {
   getSlotMetadata(
     deviceHandle: string,
     slot: string,
-    connectionHandle?: string
+    connectionHandle?: string | null
   ): Promise<PivSlotMetadata>;
 
   getCertificate(
     deviceHandle: string,
     slot: string,
-    connectionHandle?: string
+    connectionHandle?: string | null
   ): Promise<string>;
   putCertificate(
     deviceHandle: string,
@@ -119,7 +119,7 @@ export interface Spec extends TurboModule {
     slot: string,
     keyType: string,
     payload: string,
-    connectionHandle?: string
+    connectionHandle?: string | null
   ): Promise<string>;
 
   getBioMetadata(deviceHandle: string): Promise<PivBioMetadata>;
