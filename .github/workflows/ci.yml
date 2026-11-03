@@ -138,9 +138,6 @@ jobs:
           pnpm exec turbo run build:android --cache-dir="${{ env.TURBO_CACHE_DIR }}"
 
   build-ios:
-    # Disabled: prebuild + native iOS build was eating CI runner quota.
-    # Remove this line to re-enable.
-    if: false
     runs-on: macos-latest
 
     env:
